@@ -96,39 +96,33 @@ class ARTracker {
         );
       }
 
-      // Convert File to URL if needed
+      // Handle marker image - can be File, data URL, or file path (string)
       // MindAR accepts .mind files (compiled) or image files (PNG/JPG)
       let markerUrl = markerImage;
+      
       if (markerImage instanceof File) {
-        // Check if it's a .mind file or regular image
-        const isMindFile = markerImage.name.toLowerCase().endsWith('.mind');
-        
-        if (isMindFile) {
-          // For .mind files, use Blob URL directly
-          markerUrl = URL.createObjectURL(markerImage);
-          this.markerBlobUrl = markerUrl; // Store for cleanup
+        // File object - create Blob URL
+        markerUrl = URL.createObjectURL(markerImage);
+        this.markerBlobUrl = markerUrl; // Store for cleanup
+      } else if (typeof markerImage === "string") {
+        if (markerImage.startsWith("data:")) {
+          // Data URL - convert to Blob URL for better compatibility
+          try {
+            const response = await fetch(markerImage);
+            const blob = await response.blob();
+            markerUrl = URL.createObjectURL(blob);
+            this.markerBlobUrl = markerUrl; // Store for cleanup
+          } catch (error) {
+            console.warn(
+              "Failed to convert data URL to Blob URL, using data URL directly:",
+              error
+            );
+            // Fall back to data URL if conversion fails
+          }
         } else {
-          // For regular images, use Blob URL
-          // MindAR will compile the image automatically
-          markerUrl = URL.createObjectURL(markerImage);
-          this.markerBlobUrl = markerUrl; // Store for cleanup
-        }
-      } else if (
-        typeof markerImage === "string" &&
-        markerImage.startsWith("data:")
-      ) {
-        // If it's a data URL, convert to Blob URL for better compatibility
-        try {
-          const response = await fetch(markerImage);
-          const blob = await response.blob();
-          markerUrl = URL.createObjectURL(blob);
-          this.markerBlobUrl = markerUrl; // Store for cleanup
-        } catch (error) {
-          console.warn(
-            "Failed to convert data URL to Blob URL, using data URL directly:",
-            error
-          );
-          // Fall back to data URL if conversion fails
+          // Regular file path (e.g., 'assets/target.mind') - use directly
+          // MindAR will load it from the server
+          markerUrl = markerImage;
         }
       }
 

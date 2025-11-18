@@ -30,57 +30,11 @@
         <div class="setup-content">
           <h1>AR Video Tracker</h1>
           <p class="subtitle">Point your camera at a marker to play videos</p>
-
-          <div class="setup-section">
-            <h3>1. Upload Marker</h3>
-            <div class="upload-area" id="marker-upload-area">
-              <input type="file" id="marker-input" accept=".mind,image/*" hidden />
-              <div class="upload-placeholder">
-                <svg
-                  width="48"
-                  height="48"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="17 8 12 3 7 8"></polyline>
-                  <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-                <p>Click to upload marker</p>
-                <p class="hint">.mind file (preferred) or image (PNG/JPG, 300x300px minimum)</p>
-              </div>
-              <img id="marker-preview" class="hidden" />
-            </div>
-          </div>
-
-          <div class="setup-section">
-            <h3>2. Upload Video</h3>
-            <div class="upload-area" id="video-upload-area">
-              <input type="file" id="video-input" accept="video/*" hidden />
-              <div class="upload-placeholder">
-                <svg
-                  width="48"
-                  height="48"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                >
-                  <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                </svg>
-                <p>Click to upload video</p>
-                <p class="hint">MP4 or WebM format</p>
-              </div>
-              <video id="video-preview" class="hidden" controls></video>
-            </div>
-          </div>
-
-          <button id="start-ar-btn" class="btn btn-primary" disabled>
+          <p class="hint" style="margin: 20px 0; color: #666;">
+            Make sure you have <code>assets/target.mind</code> and <code>assets/video.mp4</code> in your project
+          </p>
+          <button id="start-ar-btn" class="btn btn-primary">
             Start AR Experience
-          </button>
-          <button id="use-default-marker-btn" class="btn btn-secondary">
-            Use Default Marker
           </button>
         </div>
       </div>
