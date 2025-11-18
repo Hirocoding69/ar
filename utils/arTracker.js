@@ -152,6 +152,62 @@ class ARTracker {
       // Start MindAR
       await this.mindarThree.start();
 
+      // Debug: Log what's available in mindarThree
+      console.log('MindAR started. Available properties:', {
+        hasAnchor: !!this.mindarThree.anchor,
+        anchorType: this.mindarThree.anchor ? typeof this.mindarThree.anchor : 'undefined',
+        hasAnchors: !!this.mindarThree.anchors,
+        anchorsLength: this.mindarThree.anchors ? this.mindarThree.anchors.length : 0,
+        hasController: !!this.mindarThree.controller,
+        mindarThreeKeys: Object.keys(this.mindarThree).filter(k => !k.startsWith('_'))
+      });
+
+      // Try to get anchor - MindAR creates it during start
+      // Try different ways to access the anchor
+      let anchor = null;
+      
+      // Method 1: Check if anchor exists directly
+      if (this.mindarThree.anchor) {
+        if (this.mindarThree.anchor.group) {
+          anchor = this.mindarThree.anchor.group;
+          console.log('Found anchor via mindarThree.anchor.group');
+        } else if (this.mindarThree.anchor instanceof THREE.Group) {
+          anchor = this.mindarThree.anchor;
+          console.log('Found anchor via mindarThree.anchor (is Group)');
+        } else {
+          console.log('anchor exists but structure:', Object.keys(this.mindarThree.anchor));
+        }
+      }
+      
+      // Method 2: Check anchors array (for multiple targets)
+      if (!anchor && this.mindarThree.anchors && this.mindarThree.anchors.length > 0) {
+        const firstAnchor = this.mindarThree.anchors[0];
+        if (firstAnchor.group) {
+          anchor = firstAnchor.group;
+          console.log('Found anchor via mindarThree.anchors[0].group');
+        } else if (firstAnchor instanceof THREE.Group) {
+          anchor = firstAnchor;
+          console.log('Found anchor via mindarThree.anchors[0] (is Group)');
+        }
+      }
+      
+      // Method 3: Try accessing through controller
+      if (!anchor && this.mindarThree.controller) {
+        const controller = this.mindarThree.controller;
+        if (controller.anchors && controller.anchors.length > 0) {
+          const firstAnchor = controller.anchors[0];
+          if (firstAnchor.group) {
+            anchor = firstAnchor.group;
+            console.log('Found anchor via controller.anchors[0].group');
+          }
+        }
+      }
+
+      if (!anchor) {
+        throw new Error('Failed to get AR anchor. Please check: 1) The marker file (target.mind) exists in assets folder, 2) The marker file is valid, 3) Check browser console for more details.');
+      }
+
+      this.anchor = anchor;
       this.isInitialized = true;
 
       // Start render loop
@@ -259,10 +315,15 @@ class ARTracker {
    * @returns {THREE.Group|null}
    */
   getAnchor() {
-    if (!this.mindarThree || !this.mindarThree.anchor) {
-      return null;
+    // Return stored anchor if available, otherwise try to get it from mindarThree
+    if (this.anchor) {
+      return this.anchor;
     }
-    return this.mindarThree.anchor.group;
+    if (this.mindarThree && this.mindarThree.anchor && this.mindarThree.anchor.group) {
+      this.anchor = this.mindarThree.anchor.group;
+      return this.anchor;
+    }
+    return null;
   }
 
   /**
