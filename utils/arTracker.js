@@ -25,6 +25,7 @@ class ARTracker {
     this.frameCount = 0;
     this.lastFpsTime = Date.now();
     this.fps = 0;
+    this.markerBlobUrl = null; // Store Blob URL for cleanup
   }
 
   /**
@@ -95,16 +96,37 @@ class ARTracker {
         );
       }
 
-      // Convert File to data URL if needed
+      // Convert File to URL if needed
+      // MindAR works better with Blob URLs than data URLs for image files
       let markerUrl = markerImage;
       if (markerImage instanceof File) {
-        markerUrl = await this.fileToDataURL(markerImage);
+        // Use Blob URL instead of data URL for better compatibility
+        markerUrl = URL.createObjectURL(markerImage);
+        this.markerBlobUrl = markerUrl; // Store for cleanup
+      } else if (
+        typeof markerImage === "string" &&
+        markerImage.startsWith("data:")
+      ) {
+        // If it's a data URL, convert to Blob URL
+        try {
+          const response = await fetch(markerImage);
+          const blob = await response.blob();
+          markerUrl = URL.createObjectURL(blob);
+          this.markerBlobUrl = markerUrl; // Store for cleanup
+        } catch (error) {
+          console.warn(
+            "Failed to convert data URL to Blob URL, using data URL directly:",
+            error
+          );
+          // Fall back to data URL if conversion fails
+        }
       }
 
       // Create Three.js scene
       this.scene = new THREE.Scene();
 
       // Initialize MindAR
+      // Note: imageTargetSrc can be a URL to an image file (PNG/JPG) or a compiled .mind file
       this.mindarThree = new MindARThreeClass({
         container: this.container,
         imageTargetSrc: markerUrl,
@@ -249,6 +271,13 @@ class ARTracker {
       this.mindarThree.stop();
       this.mindarThree = null;
     }
+
+    // Clean up Blob URL if we created one
+    if (this.markerBlobUrl) {
+      URL.revokeObjectURL(this.markerBlobUrl);
+      this.markerBlobUrl = null;
+    }
+
     this.isInitialized = false;
     this.isTracking = false;
     this.trackingConfidence = 0;

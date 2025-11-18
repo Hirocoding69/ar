@@ -128,7 +128,6 @@
     </div>
 
     <!-- Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
 
     <!-- Import Map for ES Modules -->
@@ -140,6 +139,14 @@
           "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
         }
       }
+    </script>
+
+    <!-- Load Three.js as ES module and expose as global -->
+    <script type="module">
+      import * as THREE from "three";
+      window.THREE = THREE;
+      console.log("Three.js loaded and exposed as global");
+      window.dispatchEvent(new CustomEvent("three-ready"));
     </script>
 
     <!-- Load MindAR and expose as global -->
