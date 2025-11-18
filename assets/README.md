@@ -5,6 +5,7 @@ Place your AR marker and video files in this folder.
 ## Required Files
 
 1. **target.mind** - Compiled MindAR marker file
+
    - You can create this using the [MindAR Compiler](https://hiukim.github.io/mind-ar-js-doc/tools/compile)
    - Upload a high-contrast image (PNG/JPG, minimum 300x300px)
    - Download the compiled `.mind` file
@@ -34,9 +35,9 @@ assets/
 ## Example Marker Images
 
 Good marker images have:
+
 - High contrast (black and white work best)
 - Clear patterns or shapes
 - No repeating patterns
 - Minimum 300x300 pixels
 - Square aspect ratio recommended
-

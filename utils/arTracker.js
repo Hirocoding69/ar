@@ -126,9 +126,6 @@ class ARTracker {
         }
       }
 
-      // Create Three.js scene
-      this.scene = new THREE.Scene();
-
       // Initialize MindAR
       // Note: imageTargetSrc can be a URL to an image file (PNG/JPG) or a compiled .mind file
       this.mindarThree = new MindARThreeClass({
@@ -139,9 +136,10 @@ class ARTracker {
         missTolerance: this.options.missTolerance,
       });
 
+      // Use MindAR's renderer, scene, and camera
       const { renderer, scene, camera } = this.mindarThree;
       this.renderer = renderer;
-      this.scene = scene;
+      this.scene = scene; // Use MindAR's scene, not create our own
       this.camera = camera;
 
       // Configure renderer for mobile
@@ -196,9 +194,8 @@ class ARTracker {
         this.lastFpsTime = now;
       }
 
-      if (this.mindarThree) {
-        this.mindarThree.update();
-
+      if (this.mindarThree && this.renderer && this.scene && this.camera) {
+        // MindAR handles its own update internally, we just need to render
         // Check tracking status
         const anchor = this.mindarThree.anchor;
         if (anchor && anchor.visible) {
@@ -248,9 +245,10 @@ class ARTracker {
             }
           }
         }
-      }
 
-      this.renderer.render(this.scene, this.camera);
+        // Render the scene
+        this.renderer.render(this.scene, this.camera);
+      }
     };
 
     animate();
