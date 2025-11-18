@@ -35,30 +35,53 @@ class ARTracker {
   async initialize(markerImage) {
     try {
       // Wait for MindAR library to be available
-      // The CDN script exposes it as MINDAR (all caps) with MINDAR.MindARThree
+      // It's loaded via ES module and exposed as global
       let MindARThreeClass = null;
-      let attempts = 0;
-      const maxAttempts = 50; // Wait up to 5 seconds
 
-      while (!MindARThreeClass && attempts < maxAttempts) {
-        // Check for MINDAR.MindARThree (most common when loaded via script tag)
-        if (typeof window.MINDAR !== "undefined" && window.MINDAR.MindARThree) {
-          MindARThreeClass = window.MINDAR.MindARThree;
-          break;
-        }
-        // Check for direct MindARThree global
-        if (typeof window.MindARThree !== "undefined") {
-          MindARThreeClass =
-            window.MindARThree.MindARThree || window.MindARThree;
-          break;
-        }
-        // Check for MindAR (camelCase)
-        if (typeof window.MindAR !== "undefined" && window.MindAR.MindARThree) {
-          MindARThreeClass = window.MindAR.MindARThree;
-          break;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        attempts++;
+      // First check if it's already available
+      if (window.MINDAR?.MindARThree) {
+        MindARThreeClass = window.MINDAR.MindARThree;
+      } else if (window.MindARThree) {
+        MindARThreeClass = window.MindARThree.MindARThree || window.MindARThree;
+      } else if (window.MindAR?.MindARThree) {
+        MindARThreeClass = window.MindAR.MindARThree;
+      }
+
+      // If not available, wait for it (either via event or polling)
+      if (!MindARThreeClass) {
+        const mindarReady = new Promise((resolve) => {
+          // Listen for the ready event
+          window.addEventListener("mindar-ready", resolve, { once: true });
+        });
+
+        // Also poll as fallback
+        const pollForMindAR = async () => {
+          let attempts = 0;
+          const maxAttempts = 50; // Wait up to 5 seconds
+
+          while (attempts < maxAttempts) {
+            if (window.MINDAR?.MindARThree) {
+              return window.MINDAR.MindARThree;
+            }
+            if (window.MindARThree) {
+              return window.MindARThree.MindARThree || window.MindARThree;
+            }
+            if (window.MindAR?.MindARThree) {
+              return window.MindAR.MindARThree;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            attempts++;
+          }
+          return null;
+        };
+
+        // Wait for either the event or polling to succeed
+        MindARThreeClass = await Promise.race([
+          mindarReady.then(
+            () => window.MINDAR?.MindARThree || window.MindARThree
+          ),
+          pollForMindAR(),
+        ]);
       }
 
       if (!MindARThreeClass) {

@@ -129,12 +129,32 @@
 
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
-      onload="console.log('MindAR loaded. Available globals:', {MINDAR: typeof window.MINDAR, MindARThree: typeof window.MindARThree, MindAR: typeof window.MindAR})"
-      onerror="console.error('Failed to load MindAR library')"
-    ></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+
+    <!-- Import Map for ES Modules -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.150.0/examples/jsm/",
+          "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
+        }
+      }
+    </script>
+
+    <!-- Load MindAR and expose as global -->
+    <script type="module">
+      import { MindARThree } from "mindar-image-three";
+
+      // Expose MindARThree as a global for non-module scripts
+      window.MINDAR = { MindARThree };
+      window.MindARThree = MindARThree;
+
+      console.log("MindAR loaded and exposed as global");
+
+      // Dispatch event to notify that MindAR is ready
+      window.dispatchEvent(new CustomEvent("mindar-ready"));
+    </script>
 
     <!-- Application Scripts -->
     <script src="utils/smoothing.js"></script>
