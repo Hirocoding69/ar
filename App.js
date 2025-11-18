@@ -97,10 +97,23 @@ class App {
             const file = e.target.files[0];
             if (file) {
                 this.markerFile = file;
-                const url = URL.createObjectURL(file);
-                markerPreview.src = url;
-                markerPreview.classList.remove('hidden');
-                markerUploadArea.querySelector('.upload-placeholder').classList.add('hidden');
+                const isMindFile = file.name.toLowerCase().endsWith('.mind');
+                
+                if (isMindFile) {
+                    // For .mind files, don't show preview (can't display binary files)
+                    markerPreview.classList.add('hidden');
+                    const placeholder = markerUploadArea.querySelector('.upload-placeholder');
+                    if (placeholder) {
+                        placeholder.classList.remove('hidden');
+                        placeholder.querySelector('p').textContent = `Selected: ${file.name}`;
+                    }
+                } else {
+                    // For images, show preview
+                    const url = URL.createObjectURL(file);
+                    markerPreview.src = url;
+                    markerPreview.classList.remove('hidden');
+                    markerUploadArea.querySelector('.upload-placeholder').classList.add('hidden');
+                }
                 this.updateStartButton();
             }
         });

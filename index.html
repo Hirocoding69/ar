@@ -32,9 +32,9 @@
           <p class="subtitle">Point your camera at a marker to play videos</p>
 
           <div class="setup-section">
-            <h3>1. Upload Marker Image</h3>
+            <h3>1. Upload Marker</h3>
             <div class="upload-area" id="marker-upload-area">
-              <input type="file" id="marker-input" accept="image/*" hidden />
+              <input type="file" id="marker-input" accept=".mind,image/*" hidden />
               <div class="upload-placeholder">
                 <svg
                   width="48"
@@ -47,8 +47,8 @@
                   <polyline points="17 8 12 3 7 8"></polyline>
                   <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
-                <p>Click to upload marker image</p>
-                <p class="hint">High contrast, 300x300px minimum</p>
+                <p>Click to upload marker</p>
+                <p class="hint">.mind file (preferred) or image (PNG/JPG, 300x300px minimum)</p>
               </div>
               <img id="marker-preview" class="hidden" />
             </div>

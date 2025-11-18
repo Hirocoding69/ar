@@ -97,17 +97,27 @@ class ARTracker {
       }
 
       // Convert File to URL if needed
-      // MindAR works better with Blob URLs than data URLs for image files
+      // MindAR accepts .mind files (compiled) or image files (PNG/JPG)
       let markerUrl = markerImage;
       if (markerImage instanceof File) {
-        // Use Blob URL instead of data URL for better compatibility
-        markerUrl = URL.createObjectURL(markerImage);
-        this.markerBlobUrl = markerUrl; // Store for cleanup
+        // Check if it's a .mind file or regular image
+        const isMindFile = markerImage.name.toLowerCase().endsWith('.mind');
+        
+        if (isMindFile) {
+          // For .mind files, use Blob URL directly
+          markerUrl = URL.createObjectURL(markerImage);
+          this.markerBlobUrl = markerUrl; // Store for cleanup
+        } else {
+          // For regular images, use Blob URL
+          // MindAR will compile the image automatically
+          markerUrl = URL.createObjectURL(markerImage);
+          this.markerBlobUrl = markerUrl; // Store for cleanup
+        }
       } else if (
         typeof markerImage === "string" &&
         markerImage.startsWith("data:")
       ) {
-        // If it's a data URL, convert to Blob URL
+        // If it's a data URL, convert to Blob URL for better compatibility
         try {
           const response = await fetch(markerImage);
           const blob = await response.blob();
