@@ -58,7 +58,7 @@ async function loadMindAR() {
  * @returns {Promise<Object>} Object containing renderer, scene, camera, and anchor
  */
 export async function initializeMindAR(
-  imageTargetPath = "./assets/poster.mind"
+  imageTargetPath = "https://files.catbox.moe/ny0k47.mind"
 ) {
   // Load or wait for MindAR to be available
   const MindARThree = await loadMindAR();

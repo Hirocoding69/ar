@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 /**
  * Sets up the 3D scene with model, lights, and attaches to anchor
@@ -8,12 +8,12 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
  * @param {Object} options - Configuration options (scale, position, etc.)
  * @returns {Promise<THREE.Group>} The loaded model group
  */
-export async function setupScene(anchor, modelPath = './assets/model.glb', options = {}) {
-  const {
-    scale = 1,
-    position = [0, 0, 0],
-    rotation = [0, 0, 0],
-  } = options;
+export async function setupScene(
+  anchor,
+  modelPath = "https://files.catbox.moe/wd27s4.glb",
+  options = {}
+) {
+  const { scale = 1, position = [0, 0, 0], rotation = [0, 0, 0] } = options;
 
   // Create ambient light
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -26,7 +26,7 @@ export async function setupScene(anchor, modelPath = './assets/model.glb', optio
 
   // Load GLB model
   const loader = new GLTFLoader();
-  
+
   return new Promise((resolve, reject) => {
     loader.load(
       modelPath,
@@ -45,7 +45,7 @@ export async function setupScene(anchor, modelPath = './assets/model.glb', optio
         // Attach model to anchor
         anchor.group.add(model);
 
-        console.log('Model loaded successfully:', modelPath);
+        console.log("Model loaded successfully:", modelPath);
         resolve(model);
       },
       (progress) => {
@@ -54,10 +54,9 @@ export async function setupScene(anchor, modelPath = './assets/model.glb', optio
         console.log(`Loading model: ${percent.toFixed(2)}%`);
       },
       (error) => {
-        console.error('Error loading model:', error);
+        console.error("Error loading model:", error);
         reject(error);
       }
     );
   });
 }
-
