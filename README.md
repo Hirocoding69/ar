@@ -1,216 +1,199 @@
-# AR Video Tracker
+# MindAR Image Tracking Demo
 
-A mobile-optimized web application that uses Augmented Reality (AR) to play videos anchored to physical markers like cards or paper money. The video tracks the marker's position and orientation in real-time.
+A web-based augmented reality application using MindAR for image target tracking with 3D model overlays.
 
-## Features
+## 🚀 Features
 
-- **Real-time 6DOF Tracking**: Position and rotation tracking on all axes
-- **Smooth Video Playback**: Videos stay locked to markers with minimal jitter
-- **Custom Markers**: Upload your own marker images
-- **Mobile Optimized**: Works on iOS Safari and Android Chrome
-- **Debug Mode**: View tracking confidence, FPS, and position data
-- **Smooth Interpolation**: Kalman filtering and exponential smoothing for stable tracking
+- **Image Target Tracking**: Recognizes and tracks a target image (poster)
+- **3D Model Overlay**: Displays a GLB model when the target is detected
+- **Real-time Tracking**: Smooth tracking as the poster moves
+- **Web-based**: Runs entirely in the browser using WebXR/WebRTC
 
-## Technology Stack
+## 📋 Prerequisites
 
-- **MindAR**: Image-based AR tracking library
-- **Three.js**: 3D rendering engine
-- **GSAP**: Smooth animations (optional)
-- **Vanilla JavaScript**: Lightweight, no framework overhead
+- Node.js (v16 or higher)
+- npm or yarn
+- A webcam-enabled device (for testing)
 
-## Getting Started
+## 🛠️ Installation
 
-### Prerequisites
+1. **Clone or navigate to the project directory:**
+   ```bash
+   cd ar-video-demo
+   ```
 
-- Modern mobile browser (iOS Safari 11+, Chrome Android 80+)
-- HTTPS connection (required for camera access)
-- Camera permissions
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-### Installation
+3. **Set up target files:**
+   - See sections below for creating `poster.mind` and `model.glb`
 
-1. Clone or download this repository
-2. Serve the files using a local web server (required for camera access)
+## 🎯 Setting Up the Image Target
 
-```bash
-# Using Python 3
-python3 -m http.server 8000
+### Step 1: Prepare Your Target Image
 
-# Using Node.js (http-server)
-npx http-server -p 8000
+1. Create or choose an image to use as your AR target (e.g., `poster.png`)
+   - Recommended size: 800x600 pixels or larger
+   - High contrast images work best
+   - Avoid blurry or low-resolution images
 
-# Using PHP
-php -S localhost:8000
-```
+2. Place your image in the `assets` folder
 
-3. Open `http://localhost:8000` in your mobile browser
-4. Allow camera permissions when prompted
+### Step 2: Compile to .mind File
 
-### Usage
+You have two options:
 
-1. **Upload Marker Image**
-   - Click on the marker upload area
-   - Select a high-contrast image (minimum 300x300px)
-   - Recommended: Images with distinct corners and patterns
-   - Avoid: Solid colors, reflective surfaces, low contrast
+#### Option A: Using MindAR Web Compiler (Recommended)
 
-2. **Upload Video**
-   - Click on the video upload area
-   - Select an MP4 or WebM video file
-   - Video will play automatically when marker is detected
+1. Visit: https://mind-ar.github.io/mind-ar-js-doc/tools/compile
+2. Upload your `poster.png` image
+3. Download the generated `poster.mind` file
+4. Place it in `./assets/poster.mind`
 
-3. **Start AR Experience**
-   - Click "Start AR Experience"
-   - Point your camera at the marker
-   - Video will appear anchored to the marker
+#### Option B: Using MindAR CLI
 
-4. **Use Default Marker**
-   - Click "Use Default Marker" to use a built-in marker pattern
-   - Print or display the marker on a screen
-   - Point camera at the marker
+1. Install the CLI globally:
+   ```bash
+   npm install -g @mindar/mindar-cli
+   ```
 
-## Marker Requirements
+2. Compile your image:
+   ```bash
+   mindar-image-target ./assets/poster.png
+   ```
 
-For best tracking results, your marker should:
+3. Move the generated `poster.mind` to `./assets/poster.mind`
 
-- **High Contrast**: Clear distinction between light and dark areas
-- **Rich Features**: Multiple corners, edges, and unique patterns
-- **Minimum Size**: 300x300 pixels (larger is better)
-- **Unique Pattern**: Avoid repetitive or symmetrical patterns
-- **Non-reflective**: Matte surfaces work best
-- **Stable**: Keep marker flat and still during tracking
+## 🎨 Setting Up the 3D Model
 
-### Example Good Markers
+### Option 1: Download a Free Model
 
-- Playing cards (especially face cards with complex patterns)
-- Paper money (bills with detailed designs)
-- QR codes or barcodes
-- Custom printed markers with high-contrast patterns
-- Magazine covers with distinct graphics
+1. Visit one of these sites:
+   - [Sketchfab](https://sketchfab.com) - Filter by "Downloadable" and "GLB"
+   - [Poly Haven](https://polyhaven.com/models)
+   - [Free3D](https://free3d.com)
 
-## Performance
+2. Download a GLB model
 
-- **Target FPS**: 30+ FPS on mid-range phones
-- **Tracking Latency**: <100ms
-- **Initial Detection**: <2 seconds
-- **Video Rendering**: <50ms after detection
+3. Place it in `./assets/model.glb`
 
-## Browser Compatibility
+### Option 2: Create Your Own
 
-- ✅ iOS Safari 11+
-- ✅ Chrome Android 80+
-- ✅ Chrome Desktop (for testing)
-- ✅ Firefox (limited support)
-- ❌ Internet Explorer (not supported)
+1. Use **Blender**:
+   - Create or import your 3D model
+   - Export as GLB format
+   - Place in `./assets/model.glb`
 
-## Troubleshooting
+2. Use **Three.js Editor**:
+   - Visit https://threejs.org/editor/
+   - Create your model
+   - Export as GLB
 
-### Camera Not Working
+### Option 3: Use a Simple Test Model
 
-- Ensure you're using HTTPS (or localhost)
-- Check browser permissions for camera access
-- Try refreshing the page
-- Some browsers require user interaction before camera access
+For quick testing, you can use the sample model that may have been downloaded, or create a simple cube in Blender.
 
-### Marker Not Detecting
+## 🏃 Running the Application
 
-- Ensure good lighting (avoid low light)
-- Hold marker steady and flat
-- Move closer to marker (optimal distance: 20-50cm)
-- Use a high-contrast marker image
-- Check that marker is fully visible in camera view
+1. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
 
-### Video Not Playing
+2. **Open your browser:**
+   - The terminal will show a local URL (usually `http://localhost:5173`)
+   - Open this URL in your browser
+   - **Important**: Use HTTPS or localhost (required for camera access)
 
-- Ensure video file is in supported format (MP4/WebM)
-- Check that video has loaded (wait for "loadeddata" event)
-- Some browsers require user interaction before autoplay
-- Try tapping the video area
+3. **Allow camera permissions** when prompted
 
-### Performance Issues
+4. **Point your camera at the target image** (the poster you compiled)
 
-- Reduce video resolution/bitrate
-- Use smaller marker images
-- Close other applications
-- Ensure good lighting for better tracking
+5. **Watch the 3D model appear** when the target is detected!
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 ar-video-demo/
-├── index.html              # Main HTML file
-├── styles.css              # Application styles
-├── App.js                  # Main application logic
-├── components/
-│   ├── CameraView.js      # Camera permission handling
-│   └── VideoOverlay.js    # Video rendering component
-├── utils/
-│   ├── arTracker.js       # AR tracking logic
-│   └── smoothing.js       # Tracking smoothing algorithms
-└── README.md              # This file
+├── assets/
+│   ├── poster.png          # Your target image
+│   ├── poster.mind         # Compiled MindAR target file
+│   └── model.glb           # Your 3D model
+├── mindar-init.js          # MindAR initialization module
+├── scene.js                # 3D scene setup with GLTFLoader
+├── main.js                 # Main entry point
+├── index.html              # HTML file
+├── package.json            # Dependencies
+└── README.md               # This file
 ```
 
-## Advanced Features
+## 🔧 Customization
 
-### Debug Mode
+### Adjusting Model Scale and Position
 
-Click the settings icon (⚙️) in the AR view to enable debug mode. This shows:
-- Tracking confidence score
-- Current FPS
-- Marker position (x, y, z)
-- Marker rotation (pitch, yaw, roll)
-
-### Customization
-
-You can customize tracking behavior by modifying parameters in `App.js`:
+Edit `main.js` to modify the model settings:
 
 ```javascript
-this.arTracker = new ARTracker(container, {
-    maxTrack: 1,              // Maximum markers to track
-    warmupTolerance: 0,       // Frames before considering marker valid
-    missTolerance: 10         // Frames before considering marker lost
+await setupScene(anchor, './assets/model.glb', {
+  scale: 1,              // Change scale (1 = original size)
+  position: [0, 0, 0],   // [x, y, z] position
+  rotation: [0, 0, 0],   // [x, y, z] rotation in radians
 });
 ```
 
-Smoothing can be adjusted in `VideoOverlay.js`:
+### Changing the Target Image
 
-```javascript
-this.smoothingFilter = new ARSmoothingFilter({
-    smoothingAlpha: 0.8,      // Position smoothing (0-1, higher = smoother)
-    smoothingBeta: 0.6,       // Velocity smoothing (0-1)
-    kalmanEnabled: true       // Enable Kalman filtering
-});
-```
+1. Replace `./assets/poster.png` with your new image
+2. Recompile to generate a new `poster.mind` file
+3. Update the path in `main.js` if needed:
+   ```javascript
+   await initializeMindAR('./assets/your-new-target.mind')
+   ```
 
-## Limitations
+### Changing the 3D Model
 
-- Requires HTTPS (except localhost)
-- Camera access must be granted
-- Performance depends on device capabilities
-- Tracking quality depends on lighting and marker quality
-- Some mobile browsers have autoplay restrictions
+1. Replace `./assets/model.glb` with your new model
+2. Update the path in `main.js` if needed:
+   ```javascript
+   await setupScene(anchor, './assets/your-model.glb', {...})
+   ```
 
-## Future Enhancements
+## 🐛 Troubleshooting
 
-- Multiple marker support (different videos per marker)
-- Video playlist for single marker
-- Playback controls (play/pause via tap)
-- Save favorite markers
-- Share AR experience via URL
-- Marker training/calibration tool
-- Support for NFT (Natural Feature Tracking) markers
+### Camera Not Working
+- Ensure you're using HTTPS or localhost
+- Check browser permissions for camera access
+- Try a different browser (Chrome/Edge recommended)
 
-## License
+### Model Not Appearing
+- Verify `model.glb` exists and is a valid GLB file
+- Check browser console for loading errors
+- Ensure the target image is clearly visible and well-lit
+
+### Target Not Detecting
+- Ensure `poster.mind` is properly compiled
+- Use a high-contrast, clear target image
+- Ensure good lighting conditions
+- Hold the target steady and at a reasonable distance
+
+### Build Errors
+- Run `npm install` again to ensure all dependencies are installed
+- Check Node.js version (v16+ required)
+- Clear `node_modules` and reinstall if needed
+
+## 📚 Resources
+
+- [MindAR Documentation](https://mind-ar.github.io/mind-ar-js-doc/)
+- [Three.js Documentation](https://threejs.org/docs/)
+- [GLTF/GLB Format](https://www.khronos.org/gltf/)
+
+## 📝 License
 
 This project is open source and available for personal and commercial use.
 
-## Credits
+## 🤝 Contributing
 
-- [MindAR](https://github.com/hiukim/mind-ar-js) - AR tracking library
-- [Three.js](https://threejs.org/) - 3D graphics library
-- [GSAP](https://greensock.com/gsap/) - Animation library
+Feel free to submit issues or pull requests to improve this demo!
 
-## Support
-
-For issues, questions, or contributions, please open an issue on the repository.
-
-# ar

@@ -2,126 +2,81 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
-    />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
-    <title>AR Video Tracker</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div id="app">
-      <!-- Loading Screen -->
-      <div id="loading-screen" class="screen active">
-        <div class="loading-content">
-          <div class="spinner"></div>
-          <h2>Initializing AR...</h2>
-          <p id="loading-message">Requesting camera access</p>
-        </div>
-      </div>
-
-      <!-- Setup Screen -->
-      <div id="setup-screen" class="screen">
-        <div class="setup-content">
-          <h1>AR Video Tracker</h1>
-          <p class="subtitle">Point your camera at a marker to play videos</p>
-          <p class="hint" style="margin: 20px 0; color: #666;">
-            Make sure you have <code>assets/target.mind</code> and <code>assets/video.mp4</code> in your project
-          </p>
-          <button id="start-ar-btn" class="btn btn-primary">
-            Start AR Experience
-          </button>
-        </div>
-      </div>
-
-      <!-- AR View Screen -->
-      <div id="ar-screen" class="screen">
-        <div id="ar-container"></div>
-
-        <!-- UI Overlay -->
-        <div class="ar-overlay">
-          <div class="ar-header">
-            <button id="back-btn" class="icon-btn">←</button>
-            <div class="tracking-status">
-              <span id="tracking-indicator" class="status-dot"></span>
-              <span id="tracking-text">Searching for marker...</span>
-            </div>
-            <button id="debug-toggle" class="icon-btn">⚙️</button>
-          </div>
-
-          <div id="debug-panel" class="debug-panel hidden">
-            <h4>Debug Info</h4>
-            <div class="debug-item">
-              <span>Confidence:</span>
-              <span id="debug-confidence">0.00</span>
-            </div>
-            <div class="debug-item">
-              <span>FPS:</span>
-              <span id="debug-fps">0</span>
-            </div>
-            <div class="debug-item">
-              <span>Position:</span>
-              <span id="debug-position">0, 0, 0</span>
-            </div>
-            <div class="debug-item">
-              <span>Rotation:</span>
-              <span id="debug-rotation">0, 0, 0</span>
-            </div>
-          </div>
-
-          <div class="ar-footer">
-            <div id="user-message" class="user-message"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
-
-    <!-- Import Map for ES Modules -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MindAR Image Tracking Demo</title>
+    <!-- Import map for resolving bare module specifiers -->
     <script type="importmap">
       {
         "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.module.js",
-          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.150.0/examples/jsm/",
-          "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+          "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-image-three.prod.js"
         }
       }
     </script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    <!-- Load Three.js as ES module and expose as global -->
-    <script type="module">
-      import * as THREE from "three";
-      window.THREE = THREE;
-      console.log("Three.js loaded and exposed as global");
-      window.dispatchEvent(new CustomEvent("three-ready"));
-    </script>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        overflow: hidden;
+        background: #000;
+      }
 
-    <!-- Load MindAR and expose as global -->
-    <script type="module">
-      import { MindARThree } from "mindar-image-three";
+      #container {
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+      }
 
-      // Expose MindARThree as a global for non-module scripts
-      window.MINDAR = { MindARThree };
-      window.MindARThree = MindARThree;
+      #info {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: white;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 15px 20px;
+        border-radius: 8px;
+        z-index: 100;
+        font-size: 14px;
+        line-height: 1.6;
+      }
 
-      console.log("MindAR loaded and exposed as global");
+      #info h1 {
+        margin-bottom: 10px;
+        font-size: 18px;
+      }
 
-      // Dispatch event to notify that MindAR is ready
-      window.dispatchEvent(new CustomEvent("mindar-ready"));
-    </script>
+      #status {
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1);
+      }
 
-    <!-- Application Scripts -->
-    <script src="utils/smoothing.js"></script>
-    <script src="utils/arTracker.js"></script>
-    <script src="components/VideoOverlay.js"></script>
-    <script src="components/CameraView.js"></script>
-    <script src="App.js"></script>
+      .status-detecting {
+        color: #ffa500;
+      }
+
+      .status-tracking {
+        color: #4caf50;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <div id="info">
+      <h1>🎯 MindAR Image Tracking</h1>
+      <p>Point your camera at the target image to see the 3D model.</p>
+      <div id="status" class="status-detecting">Status: Initializing...</div>
+    </div>
+
+    <!-- MindAR will be loaded via dynamic import in main.js -->
+    <script type="module" src="./main.js"></script>
   </body>
 </html>

@@ -1,0 +1,17 @@
+PLACEHOLDER FILE - This is not a valid .mind file
+
+To create a valid poster.mind file:
+
+1. Install MindAR CLI tools:
+   npm install -g @mindar/mindar-cli
+
+2. Compile your target image:
+   mindar-image-target ./poster.png
+
+3. This will generate poster.mind in the same directory
+
+4. Move the generated poster.mind to ./assets/poster.mind
+
+Alternatively, use the MindAR web compiler:
+https://mind-ar.github.io/mind-ar-js-doc/tools/compile
+
