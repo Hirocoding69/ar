@@ -1,137 +1,45 @@
-# Zappar WebAR Video Demo
-
-A minimal WebAR project using Zappar SDK for Three.js that displays a video on a plane when an image target is detected.
-
-## Installation
-
-1. Install dependencies:
-
+# Zappar for ThreeJS Example
+​
+This repository contains an AR example using the Zappar SDK for ThreeJS. This specific example uses `parcel` to compile and bundle the assets and code, and TypeScript to get full auto-complete and compile-time error checking.
+​
+To learn more about Zappar for ThreeJS, head over to the [Zappar for ThreeJS](https://www.npmjs.com/package/@zappar/zappar-threejs) (@zappar/zappar-threejs) page on npm.
+​
+## Preview
+​
+Scan the QR code below using your native camera app or QR code reader to view the example:
+​
+![Preview QR Code"](preview-qr-code.png)
+​
+## Prerequisites
+​
+To get started you'll want to ensure you have:
+​
+- installed Node.js version 10 or later
+- printed out the example target image, `example-tracking-image.png` (image tracked projects only)
+​
+## Running the Project
+​
+Once you have cloned this repository, open a terminal in the root directory of this project and follow these steps to get started.
+​
+Install the dependencies by running:
+​
 ```bash
 npm install
 ```
-
-2. Start the development server:
-
+​
+Next, run the project using the following command:
+​
 ```bash
 npm start
 ```
+​
+The `parcel` tool will host the content locally and give you an address you can open in your browser of your local machine.
+​
+We recommend launching **instant world tracking** and **image tracked** projects on a mobile device to get the best user experience. If you'd like to try on a mobile device, follow these steps:
+​
+1. Ensure the device is on the same local network (e.g. Wifi)
+2. Find out the IP address of your computer
+3. On your mobile device, visit: `https://YOUR-IP-ADDRESS:PORT` replacing both `YOUR-IP-ADDRESS` and `PORT` (the port is the number after the `:` in the address given by `parcel`). Note it's important to type `https` at the start of the address to ensure your device connects over HTTP**S**.
 
-The server will start with HTTPS (Parcel will show you the URL, typically `https://localhost:1234`)
-
-## Setup Instructions
-
-### 1. Replace the Video URL
-
-Open `src/main.js` and find this section (around line 7):
-
-```javascript
-// Replace VIDEO_URL_HERE with your video URL (must be HTTPS)
-const VIDEO_URL = "VIDEO_URL_HERE";
-```
-
-Replace `'VIDEO_URL_HERE'` with your actual video URL. **Important:**
-
-- The video URL must be served over HTTPS
-- The video should be in a web-compatible format (MP4 recommended)
-- Example: `const VIDEO_URL = 'https://example.com/video.mp4';`
-
-### 2. Replace the Target File
-
-In the same file, find this section (around line 10):
-
-```javascript
-// Replace TARGET_FILE_HERE with your .zpt file path
-const TARGET_FILE = "TARGET_FILE_HERE";
-```
-
-Replace `'TARGET_FILE_HERE'` with the path to your `.zpt` file. This can be:
-
-- A relative path: `'assets/target.zpt'`
-- An absolute URL: `'https://example.com/target.zpt'`
-
-**Note:** The `.zpt` file is a Zappar Image Tracker target file. You can create one using Zappar's tools at [zap.works](https://zap.works).
-
-### 3. Build for Production
-
-To build for production:
-
-```bash
-npm run build
-```
-
-The built files will be in the `dist/` directory. The `--public-url='./'` flag ensures relative paths work correctly when deployed.
-
-### 4. Testing
-
-1. Run `npm start` to start the development server
-2. Open the HTTPS URL shown in the terminal (typically `https://localhost:1234`)
-3. Grant camera permissions when prompted (camera starts automatically)
-4. Point your camera at the target image
-5. The video should appear as a plane on top of the tracked image
-
-## Features
-
-- ✅ Clean project structure with npm packages
-- ✅ ES module imports
-- ✅ Parcel bundler with HTTPS support
-- ✅ Camera starts automatically on page load
-- ✅ Video loops automatically
-- ✅ Plays inline (no fullscreen on mobile)
-- ✅ Responsive design
-
-## Browser Compatibility
-
-- Chrome/Edge (recommended)
-- Safari (iOS 11+)
-- Firefox
-
-## Deploying to Vercel
-
-### Quick Deploy (Recommended)
-
-1. **Push your code to GitHub** (if not already done)
-
-2. **Go to [vercel.com](https://vercel.com)** and sign in with your GitHub account
-
-3. **Click "Add New Project"**
-
-4. **Import your GitHub repository**
-
-5. **Vercel will auto-detect Parcel** - no configuration needed!
-
-6. **Click "Deploy"**
-
-That's it! Your site will be live with HTTPS automatically.
-
-### Alternative: Deploy via Vercel CLI
-
-1. Install Vercel CLI:
-
-   ```bash
-   npm i -g vercel
-   ```
-
-2. In your project directory, run:
-
-   ```bash
-   vercel
-   ```
-
-3. Follow the prompts to deploy
-
-### Important Notes for Vercel Deployment
-
-- ✅ Vercel automatically provides HTTPS (required for camera access)
-- ✅ The `vercel.json` file is included for explicit configuration (optional)
-- ✅ Make sure your `.zpt` file and video are accessible:
-  - Host them on Vercel (place in `src/` directory) OR
-  - Use absolute URLs (hosted elsewhere)
-- ✅ After deployment, update `VIDEO_URL` and `TARGET_FILE` in `src/main.js` with your production URLs
-
-## Troubleshooting
-
-- **Video not playing**: Ensure the video URL is HTTPS and the video format is supported
-- **Tracker not loading**: Check that the `.zpt` file path is correct and accessible
-- **Camera not working**: Ensure you're on HTTPS and have granted camera permissions
-- **Video not visible**: Check browser console for errors and verify the target image is being detected
-- **Vercel deployment issues**: Make sure `vercel.json` is in the root directory and the build completes successfully
+## Target Image
+![Target Image](example-tracking-image.png)
