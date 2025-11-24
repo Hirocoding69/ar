@@ -5,10 +5,8 @@ const targetImage1 = new URL(
   "../assets/two-targets/target1.zpt",
   import.meta.url
 ).href;
-const targetImage2 = new URL(
-  "../assets/two-targets/target2.zpt",
-  import.meta.url
-).href;
+const targetImage2 = new URL("../assets/two-targets/500.zpt", import.meta.url)
+  .href;
 // Single video that will play on both trackers
 const videoUrl = new URL("../assets/video/vid.mp4", import.meta.url).href;
 // ZapparThree provides a LoadingManager that shows a progress bar while
@@ -148,35 +146,44 @@ function render() {
   requestAnimationFrame(render);
   camera.updateFrame(renderer);
 
-  // Check which tracker is visible and show video only on the active one
+  // Check which tracker is visible and show video only on ONE at a time
   if (videoPlane) {
     const tracker1Visible = trackerGroup1.visible;
     const tracker2Visible = trackerGroup2.visible;
 
-    // If tracker1 is visible, move video to tracker1
-    if (tracker1Visible && currentTrackerGroup !== trackerGroup1) {
-      // Remove from current group if it exists
+    // Priority: tracker1 first, then tracker2
+    // Only ONE tracker can be active at a time
+    if (tracker1Visible) {
+      // Tracker1 detected - disable tracker2 and show video on tracker1
+      tracker2.enabled = false;
+
+      if (currentTrackerGroup !== trackerGroup1) {
+        if (currentTrackerGroup) {
+          currentTrackerGroup.remove(videoPlane);
+        }
+        trackerGroup1.add(videoPlane);
+        currentTrackerGroup = trackerGroup1;
+      }
+    } else if (tracker2Visible) {
+      // Tracker2 detected (and tracker1 is not) - disable tracker1 and show video on tracker2
+      tracker1.enabled = false;
+
+      if (currentTrackerGroup !== trackerGroup2) {
+        if (currentTrackerGroup) {
+          currentTrackerGroup.remove(videoPlane);
+        }
+        trackerGroup2.add(videoPlane);
+        currentTrackerGroup = trackerGroup2;
+      }
+    } else {
+      // Neither visible - re-enable both trackers and remove video
+      tracker1.enabled = true;
+      tracker2.enabled = true;
+
       if (currentTrackerGroup) {
         currentTrackerGroup.remove(videoPlane);
+        currentTrackerGroup = null;
       }
-      // Add to tracker1
-      trackerGroup1.add(videoPlane);
-      currentTrackerGroup = trackerGroup1;
-    }
-    // If tracker2 is visible (and tracker1 is not), move video to tracker2
-    else if (tracker2Visible && currentTrackerGroup !== trackerGroup2) {
-      // Remove from current group if it exists
-      if (currentTrackerGroup) {
-        currentTrackerGroup.remove(videoPlane);
-      }
-      // Add to tracker2
-      trackerGroup2.add(videoPlane);
-      currentTrackerGroup = trackerGroup2;
-    }
-    // If neither is visible, remove video from any group
-    else if (!tracker1Visible && !tracker2Visible && currentTrackerGroup) {
-      currentTrackerGroup.remove(videoPlane);
-      currentTrackerGroup = null;
     }
   }
 
