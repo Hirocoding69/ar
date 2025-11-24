@@ -61,29 +61,76 @@ const videoTexture = new THREE.VideoTexture(videoElement);
 videoTexture.minFilter = THREE.LinearFilter;
 videoTexture.magFilter = THREE.LinearFilter;
 
-// Create video planes with shared material
-const planeWidth = 1.0;
-const planeHeight = 0.75; // Adjust based on your video aspect ratio
-const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
+// Function to create video plane that matches the tracked image dimensions
+// The plane will be sized based on the video's aspect ratio and scaled to match the image
+function createVideoPlane(material: THREE.MeshBasicMaterial) {
+  // Wait for video metadata to get aspect ratio
+  return new Promise<THREE.Mesh>((resolve) => {
+    const createPlane = () => {
+      // Get video dimensions
+      const videoWidth = videoElement.videoWidth || 1920;
+      const videoHeight = videoElement.videoHeight || 1080;
+      const videoAspectRatio = videoWidth / videoHeight;
+
+      // In Zappar's coordinate system, image trackers use a normalized size
+      // We'll use 1.0 as the base size and scale based on aspect ratio
+      // For portrait images, use height as base; for landscape, use width as base
+      let planeWidth = 1.0;
+      let planeHeight = 1.0;
+
+      if (videoAspectRatio > 1) {
+        // Landscape video - use width as base
+        planeWidth = 1.0;
+        planeHeight = 1.0 / videoAspectRatio;
+      } else {
+        // Portrait video - use height as base
+        planeWidth = 1.0 * videoAspectRatio;
+        planeHeight = 1.0;
+      }
+
+      const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
+      const plane = new THREE.Mesh(planeGeometry, material);
+
+      // Position the plane flat on the tracked image (at image surface)
+      // In Zappar's coordinate system, the image center is at (0, 0, 0)
+      // The plane faces the camera by default (no rotation needed)
+      plane.position.set(0, 0, 0);
+
+      resolve(plane);
+    };
+
+    if (videoElement.readyState >= 2) {
+      // Video metadata already loaded
+      createPlane();
+    } else {
+      // Wait for video metadata
+      videoElement.addEventListener("loadedmetadata", createPlane, {
+        once: true,
+      });
+    }
+  });
+}
+
+// Create material for video planes
 const planeMaterial = new THREE.MeshBasicMaterial({
   map: videoTexture,
   transparent: true,
   side: THREE.DoubleSide,
 });
 
-// Both planes use the same material/texture (shared instance)
-const videoPlane1 = new THREE.Mesh(planeGeometry, planeMaterial);
-const videoPlane2 = new THREE.Mesh(planeGeometry, planeMaterial);
+// Create video planes that match the image dimensions
+let videoPlane1: THREE.Mesh;
+let videoPlane2: THREE.Mesh;
 
-// Position the planes above the tracked images
-videoPlane1.position.set(0, 0.1, 0);
-videoPlane1.rotation.x = -Math.PI / 2; // Lay flat on top
+createVideoPlane(planeMaterial).then((plane) => {
+  videoPlane1 = plane;
+  trackerGroup1.add(videoPlane1);
+});
 
-videoPlane2.position.set(0, 0.1, 0);
-videoPlane2.rotation.x = -Math.PI / 2; // Lay flat on top
-
-trackerGroup1.add(videoPlane1);
-trackerGroup2.add(videoPlane2);
+createVideoPlane(planeMaterial).then((plane) => {
+  videoPlane2 = plane;
+  trackerGroup2.add(videoPlane2);
+});
 
 // Start video playback when camera is ready
 ZapparThree.permissionRequestUI().then((granted) => {
