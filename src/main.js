@@ -5,8 +5,7 @@ import * as ZapparThree from "@zappar/zappar-threejs";
 // CONFIGURATION - REPLACE THESE VALUES
 // ============================================
 // Replace VIDEO_URL_HERE with your video URL (must be HTTPS)
-const VIDEO_URL =
-  "https://dev-p99-online-bucket.s3.ap-southeast-1.amazonaws.com/test/Champion+CGI+Frame+Full+HD.mp4";
+const VIDEO_URL = "./assets/vid.mp4";
 
 // Replace TARGET_FILE_HERE with your .zpt file path
 const TARGET_FILE = "./assets/500.zpt";
