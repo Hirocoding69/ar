@@ -27,25 +27,30 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 
-// Zappar camera
-const camera = new ZapparThree.ZapparCamera({
-  rearCamera: false,
-});
+// Configure WebGL context for Zappar
+ZapparThree.glContextSet(renderer.getContext());
+
+// Zappar camera (v2.0.1 API)
+const camera = new ZapparThree.Camera();
 
 // Set scene background to camera feed
 scene.background = camera.backgroundTexture;
 
-// Image tracker
-const imageTracker = new ZapparThree.ZapparImageTracker();
-imageTracker
-  .loadTarget(TARGET_FILE)
-  .then(() => {
+// Image tracker (v2.0.1 API)
+const imageTracker = new ZapparThree.ImageTrackerLoader().load(
+  TARGET_FILE,
+  () => {
     loading.classList.remove("active");
-  })
-  .catch((error) => {
+  },
+  (error) => {
     console.error("Error loading tracker target:", error);
     loading.textContent = "Error loading tracker. Check console.";
-  });
+  }
+);
+
+// Create anchor group for the tracker
+const trackerGroup = new ZapparThree.ImageAnchorGroup(camera, imageTracker);
+scene.add(trackerGroup);
 
 // Video element for texture
 const videoElement = document.createElement("video");
@@ -80,28 +85,32 @@ const videoPlane = new THREE.Mesh(planeGeometry, planeMaterial);
 videoPlane.position.set(0, 0.1, 0); // Slightly above the tracked image
 videoPlane.rotation.x = -Math.PI / 2; // Rotate to lay flat on top
 
-// Add plane to tracker group
-imageTracker.addChild(videoPlane);
+// Add plane to tracker group (v2.0.1 API)
+trackerGroup.add(videoPlane);
 
-// Add tracker to scene
-scene.add(imageTracker);
-
-// Start camera and video immediately
-(async () => {
-  try {
-    // Request camera permission and start
-    await camera.zapparCamera.start();
-
-    // Start video playback
-    await videoElement.play();
-
-    // Hide loading
-    loading.style.display = "none";
-  } catch (error) {
-    console.error("Error starting AR:", error);
+// Start camera and video immediately (v2.0.1 API)
+ZapparThree.permissionRequestUI()
+  .then((granted) => {
+    if (granted) {
+      camera.start();
+      // Start video playback
+      videoElement
+        .play()
+        .then(() => {
+          loading.style.display = "none";
+        })
+        .catch((error) => {
+          console.error("Error playing video:", error);
+        });
+    } else {
+      ZapparThree.permissionDeniedUI();
+      loading.textContent = "Camera permission denied.";
+    }
+  })
+  .catch((error) => {
+    console.error("Error requesting camera permission:", error);
     loading.textContent = "Failed to start camera. Please grant permissions.";
-  }
-})();
+  });
 
 // Animation loop
 function animate() {
@@ -109,9 +118,6 @@ function animate() {
 
   // Update Zappar camera
   camera.updateFrame(renderer);
-
-  // Update tracker pose
-  imageTracker.update();
 
   // Video texture updates automatically when video plays
 
