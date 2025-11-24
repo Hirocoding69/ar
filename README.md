@@ -1,199 +1,137 @@
-# MindAR Image Tracking Demo
+# Zappar WebAR Video Demo
 
-A web-based augmented reality application using MindAR for image target tracking with 3D model overlays.
+A minimal WebAR project using Zappar SDK for Three.js that displays a video on a plane when an image target is detected.
 
-## 🚀 Features
+## Installation
 
-- **Image Target Tracking**: Recognizes and tracks a target image (poster)
-- **3D Model Overlay**: Displays a GLB model when the target is detected
-- **Real-time Tracking**: Smooth tracking as the poster moves
-- **Web-based**: Runs entirely in the browser using WebXR/WebRTC
+1. Install dependencies:
 
-## 📋 Prerequisites
-
-- Node.js (v16 or higher)
-- npm or yarn
-- A webcam-enabled device (for testing)
-
-## 🛠️ Installation
-
-1. **Clone or navigate to the project directory:**
-   ```bash
-   cd ar-video-demo
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Set up target files:**
-   - See sections below for creating `poster.mind` and `model.glb`
-
-## 🎯 Setting Up the Image Target
-
-### Step 1: Prepare Your Target Image
-
-1. Create or choose an image to use as your AR target (e.g., `poster.png`)
-   - Recommended size: 800x600 pixels or larger
-   - High contrast images work best
-   - Avoid blurry or low-resolution images
-
-2. Place your image in the `assets` folder
-
-### Step 2: Compile to .mind File
-
-You have two options:
-
-#### Option A: Using MindAR Web Compiler (Recommended)
-
-1. Visit: https://mind-ar.github.io/mind-ar-js-doc/tools/compile
-2. Upload your `poster.png` image
-3. Download the generated `poster.mind` file
-4. Place it in `./assets/poster.mind`
-
-#### Option B: Using MindAR CLI
-
-1. Install the CLI globally:
-   ```bash
-   npm install -g @mindar/mindar-cli
-   ```
-
-2. Compile your image:
-   ```bash
-   mindar-image-target ./assets/poster.png
-   ```
-
-3. Move the generated `poster.mind` to `./assets/poster.mind`
-
-## 🎨 Setting Up the 3D Model
-
-### Option 1: Download a Free Model
-
-1. Visit one of these sites:
-   - [Sketchfab](https://sketchfab.com) - Filter by "Downloadable" and "GLB"
-   - [Poly Haven](https://polyhaven.com/models)
-   - [Free3D](https://free3d.com)
-
-2. Download a GLB model
-
-3. Place it in `./assets/model.glb`
-
-### Option 2: Create Your Own
-
-1. Use **Blender**:
-   - Create or import your 3D model
-   - Export as GLB format
-   - Place in `./assets/model.glb`
-
-2. Use **Three.js Editor**:
-   - Visit https://threejs.org/editor/
-   - Create your model
-   - Export as GLB
-
-### Option 3: Use a Simple Test Model
-
-For quick testing, you can use the sample model that may have been downloaded, or create a simple cube in Blender.
-
-## 🏃 Running the Application
-
-1. **Start the development server:**
-   ```bash
-   npm run dev
-   ```
-
-2. **Open your browser:**
-   - The terminal will show a local URL (usually `http://localhost:5173`)
-   - Open this URL in your browser
-   - **Important**: Use HTTPS or localhost (required for camera access)
-
-3. **Allow camera permissions** when prompted
-
-4. **Point your camera at the target image** (the poster you compiled)
-
-5. **Watch the 3D model appear** when the target is detected!
-
-## 📁 Project Structure
-
-```
-ar-video-demo/
-├── assets/
-│   ├── poster.png          # Your target image
-│   ├── poster.mind         # Compiled MindAR target file
-│   └── model.glb           # Your 3D model
-├── mindar-init.js          # MindAR initialization module
-├── scene.js                # 3D scene setup with GLTFLoader
-├── main.js                 # Main entry point
-├── index.html              # HTML file
-├── package.json            # Dependencies
-└── README.md               # This file
+```bash
+npm install
 ```
 
-## 🔧 Customization
+2. Start the development server:
 
-### Adjusting Model Scale and Position
+```bash
+npm start
+```
 
-Edit `main.js` to modify the model settings:
+The server will start with HTTPS (Parcel will show you the URL, typically `https://localhost:1234`)
+
+## Setup Instructions
+
+### 1. Replace the Video URL
+
+Open `src/main.js` and find this section (around line 7):
 
 ```javascript
-await setupScene(anchor, './assets/model.glb', {
-  scale: 1,              // Change scale (1 = original size)
-  position: [0, 0, 0],   // [x, y, z] position
-  rotation: [0, 0, 0],   // [x, y, z] rotation in radians
-});
+// Replace VIDEO_URL_HERE with your video URL (must be HTTPS)
+const VIDEO_URL = "VIDEO_URL_HERE";
 ```
 
-### Changing the Target Image
+Replace `'VIDEO_URL_HERE'` with your actual video URL. **Important:**
 
-1. Replace `./assets/poster.png` with your new image
-2. Recompile to generate a new `poster.mind` file
-3. Update the path in `main.js` if needed:
-   ```javascript
-   await initializeMindAR('./assets/your-new-target.mind')
+- The video URL must be served over HTTPS
+- The video should be in a web-compatible format (MP4 recommended)
+- Example: `const VIDEO_URL = 'https://example.com/video.mp4';`
+
+### 2. Replace the Target File
+
+In the same file, find this section (around line 10):
+
+```javascript
+// Replace TARGET_FILE_HERE with your .zpt file path
+const TARGET_FILE = "TARGET_FILE_HERE";
+```
+
+Replace `'TARGET_FILE_HERE'` with the path to your `.zpt` file. This can be:
+
+- A relative path: `'assets/target.zpt'`
+- An absolute URL: `'https://example.com/target.zpt'`
+
+**Note:** The `.zpt` file is a Zappar Image Tracker target file. You can create one using Zappar's tools at [zap.works](https://zap.works).
+
+### 3. Build for Production
+
+To build for production:
+
+```bash
+npm run build
+```
+
+The built files will be in the `dist/` directory. The `--public-url='./'` flag ensures relative paths work correctly when deployed.
+
+### 4. Testing
+
+1. Run `npm start` to start the development server
+2. Open the HTTPS URL shown in the terminal (typically `https://localhost:1234`)
+3. Grant camera permissions when prompted (camera starts automatically)
+4. Point your camera at the target image
+5. The video should appear as a plane on top of the tracked image
+
+## Features
+
+- ✅ Clean project structure with npm packages
+- ✅ ES module imports
+- ✅ Parcel bundler with HTTPS support
+- ✅ Camera starts automatically on page load
+- ✅ Video loops automatically
+- ✅ Plays inline (no fullscreen on mobile)
+- ✅ Responsive design
+
+## Browser Compatibility
+
+- Chrome/Edge (recommended)
+- Safari (iOS 11+)
+- Firefox
+
+## Deploying to Vercel
+
+### Quick Deploy (Recommended)
+
+1. **Push your code to GitHub** (if not already done)
+
+2. **Go to [vercel.com](https://vercel.com)** and sign in with your GitHub account
+
+3. **Click "Add New Project"**
+
+4. **Import your GitHub repository**
+
+5. **Vercel will auto-detect Parcel** - no configuration needed!
+
+6. **Click "Deploy"**
+
+That's it! Your site will be live with HTTPS automatically.
+
+### Alternative: Deploy via Vercel CLI
+
+1. Install Vercel CLI:
+
+   ```bash
+   npm i -g vercel
    ```
 
-### Changing the 3D Model
+2. In your project directory, run:
 
-1. Replace `./assets/model.glb` with your new model
-2. Update the path in `main.js` if needed:
-   ```javascript
-   await setupScene(anchor, './assets/your-model.glb', {...})
+   ```bash
+   vercel
    ```
 
-## 🐛 Troubleshooting
+3. Follow the prompts to deploy
 
-### Camera Not Working
-- Ensure you're using HTTPS or localhost
-- Check browser permissions for camera access
-- Try a different browser (Chrome/Edge recommended)
+### Important Notes for Vercel Deployment
 
-### Model Not Appearing
-- Verify `model.glb` exists and is a valid GLB file
-- Check browser console for loading errors
-- Ensure the target image is clearly visible and well-lit
+- ✅ Vercel automatically provides HTTPS (required for camera access)
+- ✅ The `vercel.json` file is included for explicit configuration (optional)
+- ✅ Make sure your `.zpt` file and video are accessible:
+  - Host them on Vercel (place in `src/` directory) OR
+  - Use absolute URLs (hosted elsewhere)
+- ✅ After deployment, update `VIDEO_URL` and `TARGET_FILE` in `src/main.js` with your production URLs
 
-### Target Not Detecting
-- Ensure `poster.mind` is properly compiled
-- Use a high-contrast, clear target image
-- Ensure good lighting conditions
-- Hold the target steady and at a reasonable distance
+## Troubleshooting
 
-### Build Errors
-- Run `npm install` again to ensure all dependencies are installed
-- Check Node.js version (v16+ required)
-- Clear `node_modules` and reinstall if needed
-
-## 📚 Resources
-
-- [MindAR Documentation](https://mind-ar.github.io/mind-ar-js-doc/)
-- [Three.js Documentation](https://threejs.org/docs/)
-- [GLTF/GLB Format](https://www.khronos.org/gltf/)
-
-## 📝 License
-
-This project is open source and available for personal and commercial use.
-
-## 🤝 Contributing
-
-Feel free to submit issues or pull requests to improve this demo!
-
+- **Video not playing**: Ensure the video URL is HTTPS and the video format is supported
+- **Tracker not loading**: Check that the `.zpt` file path is correct and accessible
+- **Camera not working**: Ensure you're on HTTPS and have granted camera permissions
+- **Video not visible**: Check browser console for errors and verify the target image is being detected
+- **Vercel deployment issues**: Make sure `vercel.json` is in the root directory and the build completes successfully
