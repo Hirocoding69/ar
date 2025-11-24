@@ -164,6 +164,13 @@ function render() {
         trackerGroup1.add(videoPlane);
         currentTrackerGroup = trackerGroup1;
       }
+
+      // Play video when target is detected
+      if (videoElement.paused) {
+        videoElement.play().catch((error) => {
+          console.error("Error playing video:", error);
+        });
+      }
     } else if (tracker2Visible) {
       // Tracker2 detected (and tracker1 is not) - disable tracker1 and show video on tracker2
       tracker1.enabled = false;
@@ -175,8 +182,19 @@ function render() {
         trackerGroup2.add(videoPlane);
         currentTrackerGroup = trackerGroup2;
       }
+
+      // Play video when target is detected
+      if (videoElement.paused) {
+        videoElement.play().catch((error) => {
+          console.error("Error playing video:", error);
+        });
+      }
     } else {
-      // Neither visible - re-enable both trackers and remove video
+      // Neither visible - pause video, re-enable both trackers and remove video visual
+      if (!videoElement.paused) {
+        videoElement.pause();
+      }
+
       tracker1.enabled = true;
       tracker2.enabled = true;
 
