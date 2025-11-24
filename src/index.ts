@@ -6,7 +6,7 @@ const targetImage1 = new URL(
   import.meta.url
 ).href;
 const targetImage2 = new URL(
-  "../assets/two-targets/Cambodia_NBC_500_riels_2014.00.00_B429a_P66_2295088_r.jpg.zpt",
+  "../assets/two-targets/target2.jpg.zpt",
   import.meta.url
 ).href;
 // Single video that will play on both trackers
