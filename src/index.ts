@@ -38,6 +38,8 @@ scene.background = camera.backgroundTexture;
 
 // Set up our image tracker groups
 // Pass our loading manager in to ensure the progress bar works correctly
+// Both trackers are configured, but Zappar will only track one image at a time
+// When target1 is detected, videoPlane1 shows. When target2 is detected, videoPlane2 shows.
 const tracker1 = new ZapparThree.ImageTrackerLoader(manager).load(targetImage1);
 const tracker2 = new ZapparThree.ImageTrackerLoader(manager).load(targetImage2);
 
@@ -118,18 +120,14 @@ const planeMaterial = new THREE.MeshBasicMaterial({
   side: THREE.DoubleSide,
 });
 
-// Create video planes that match the image dimensions
-let videoPlane1: THREE.Mesh;
-let videoPlane2: THREE.Mesh;
+// Create a single video plane that will be moved between tracker groups
+// Only one video will play at a time - whichever target is being tracked
+let videoPlane: THREE.Mesh | null = null;
+let currentTrackerGroup: ZapparThree.ImageAnchorGroup | null = null;
 
 createVideoPlane(planeMaterial).then((plane) => {
-  videoPlane1 = plane;
-  trackerGroup1.add(videoPlane1);
-});
-
-createVideoPlane(planeMaterial).then((plane) => {
-  videoPlane2 = plane;
-  trackerGroup2.add(videoPlane2);
+  videoPlane = plane;
+  // Initially, don't add to any group - will be added when a target is detected
 });
 
 // Start video playback when camera is ready
@@ -149,6 +147,38 @@ ZapparThree.permissionRequestUI().then((granted) => {
 function render() {
   requestAnimationFrame(render);
   camera.updateFrame(renderer);
+
+  // Check which tracker is visible and show video only on the active one
+  if (videoPlane) {
+    const tracker1Visible = trackerGroup1.visible;
+    const tracker2Visible = trackerGroup2.visible;
+
+    // If tracker1 is visible, move video to tracker1
+    if (tracker1Visible && currentTrackerGroup !== trackerGroup1) {
+      // Remove from current group if it exists
+      if (currentTrackerGroup) {
+        currentTrackerGroup.remove(videoPlane);
+      }
+      // Add to tracker1
+      trackerGroup1.add(videoPlane);
+      currentTrackerGroup = trackerGroup1;
+    }
+    // If tracker2 is visible (and tracker1 is not), move video to tracker2
+    else if (tracker2Visible && currentTrackerGroup !== trackerGroup2) {
+      // Remove from current group if it exists
+      if (currentTrackerGroup) {
+        currentTrackerGroup.remove(videoPlane);
+      }
+      // Add to tracker2
+      trackerGroup2.add(videoPlane);
+      currentTrackerGroup = trackerGroup2;
+    }
+    // If neither is visible, remove video from any group
+    else if (!tracker1Visible && !tracker2Visible && currentTrackerGroup) {
+      currentTrackerGroup.remove(videoPlane);
+      currentTrackerGroup = null;
+    }
+  }
 
   renderer.render(scene, camera);
 }
