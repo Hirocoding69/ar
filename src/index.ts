@@ -6,7 +6,7 @@ const targetImage1 = new URL(
   import.meta.url
 ).href;
 const targetImage2 = new URL(
-  "../assets/two-targets/target2.jpg.zpt",
+  "../assets/two-targets/target2.zpt",
   import.meta.url
 ).href;
 // Single video that will play on both trackers
