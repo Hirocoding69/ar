@@ -5,10 +5,8 @@ const targetImage1 = new URL(
   "../assets/two-targets/target1.zpt",
   import.meta.url
 ).href;
-const targetImage2 = new URL(
-  "../assets/two-targets/target2.zpt",
-  import.meta.url
-).href;
+const targetImage2 = new URL("../assets/two-targets/500.zpt", import.meta.url)
+  .href;
 // Single video that will play on both trackers
 const videoUrl = new URL("../assets/video/vid.mp4", import.meta.url).href;
 // ZapparThree provides a LoadingManager that shows a progress bar while
