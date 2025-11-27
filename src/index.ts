@@ -95,14 +95,11 @@ createVideoPlane(planeMaterial).then((plane) => {
   plane.visible = false;
 });
 
-// Start video playback when camera is ready
+// Start camera when permission is granted (but don't play video yet)
 ZapparThree.permissionRequestUI().then((granted) => {
   if (granted) {
     camera.start();
-    // Start video playback (single video for both trackers)
-    videoElement.play().catch((error) => {
-      console.error("Error playing video:", error);
-    });
+    // Video will only play when a target is detected (see render loop)
   } else {
     ZapparThree.permissionDeniedUI();
   }
