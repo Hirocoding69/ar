@@ -60,53 +60,22 @@ videoTexture.minFilter = THREE.LinearFilter;
 videoTexture.magFilter = THREE.LinearFilter;
 
 // Function to create video plane that matches the tracked image dimensions
-// The plane will be sized based on the video's aspect ratio and scaled to match the image
+// The plane will be sized to fill the entire tracked image (1.0 x 1.0 in Zappar's coordinate system)
 function createVideoPlane(material: THREE.MeshBasicMaterial) {
-  // Wait for video metadata to get aspect ratio
-  return new Promise<THREE.Mesh>((resolve) => {
-    const createPlane = () => {
-      // Get video dimensions
-      const videoWidth = videoElement.videoWidth || 1920;
-      const videoHeight = videoElement.videoHeight || 1080;
-      const videoAspectRatio = videoWidth / videoHeight;
+  // In Zappar's coordinate system, image trackers use a normalized size of 1.0 x 1.0
+  // Create a plane that matches the full image dimensions so the video fills the entire image
+  const planeWidth = 1.0;
+  const planeHeight = 1.0;
 
-      // In Zappar's coordinate system, image trackers use a normalized size
-      // We'll use 1.0 as the base size and scale based on aspect ratio
-      // For portrait images, use height as base; for landscape, use width as base
-      let planeWidth = 1.0;
-      let planeHeight = 1.0;
+  const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
+  const plane = new THREE.Mesh(planeGeometry, material);
 
-      if (videoAspectRatio > 1) {
-        // Landscape video - use width as base
-        planeWidth = 1.0;
-        planeHeight = 1.0 / videoAspectRatio;
-      } else {
-        // Portrait video - use height as base
-        planeWidth = 1.0 * videoAspectRatio;
-        planeHeight = 1.0;
-      }
+  // Position the plane flat on the tracked image (at image surface)
+  // In Zappar's coordinate system, the image center is at (0, 0, 0)
+  // The plane faces the camera by default (no rotation needed)
+  plane.position.set(0, 0, 0);
 
-      const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
-      const plane = new THREE.Mesh(planeGeometry, material);
-
-      // Position the plane flat on the tracked image (at image surface)
-      // In Zappar's coordinate system, the image center is at (0, 0, 0)
-      // The plane faces the camera by default (no rotation needed)
-      plane.position.set(0, 0, 0);
-
-      resolve(plane);
-    };
-
-    if (videoElement.readyState >= 2) {
-      // Video metadata already loaded
-      createPlane();
-    } else {
-      // Wait for video metadata
-      videoElement.addEventListener("loadedmetadata", createPlane, {
-        once: true,
-      });
-    }
-  });
+  return Promise.resolve(plane);
 }
 
 // Create material for video planes
