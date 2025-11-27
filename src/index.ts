@@ -48,7 +48,6 @@ scene.add(trackerGroup2);
 const videoElement = document.createElement("video");
 videoElement.src = videoUrl;
 videoElement.loop = true;
-videoElement.muted = true;
 videoElement.playsInline = true;
 videoElement.setAttribute("playsinline", "");
 videoElement.setAttribute("webkit-playsinline", "");
@@ -64,8 +63,8 @@ videoTexture.magFilter = THREE.LinearFilter;
 function createVideoPlane(material: THREE.MeshBasicMaterial) {
   // In Zappar's coordinate system, image trackers use a normalized size of 1.0 x 1.0
   // Create a plane that matches the full image dimensions so the video fills the entire image
-  const planeWidth = 1.0;
-  const planeHeight = 1.0;
+  const planeWidth = 6.0;
+  const planeHeight = 3.0;
 
   const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
   const plane = new THREE.Mesh(planeGeometry, material);
@@ -92,7 +91,8 @@ let currentTrackerGroup: ZapparThree.ImageAnchorGroup | null = null;
 
 createVideoPlane(planeMaterial).then((plane) => {
   videoPlane = plane;
-  // Initially, don't add to any group - will be added when a target is detected
+  // Initially, don't add to any group and hide it - will be shown when a target is detected
+  plane.visible = false;
 });
 
 // Start video playback when camera is ready
@@ -132,6 +132,11 @@ function render() {
         currentTrackerGroup = trackerGroup1;
       }
 
+      // Make sure video plane is visible
+      if (videoPlane) {
+        videoPlane.visible = true;
+      }
+
       // Play video when target is detected
       if (videoElement.paused) {
         videoElement.play().catch((error) => {
@@ -150,6 +155,11 @@ function render() {
         currentTrackerGroup = trackerGroup2;
       }
 
+      // Make sure video plane is visible
+      if (videoPlane) {
+        videoPlane.visible = true;
+      }
+
       // Play video when target is detected
       if (videoElement.paused) {
         videoElement.play().catch((error) => {
@@ -165,9 +175,15 @@ function render() {
       tracker1.enabled = true;
       tracker2.enabled = true;
 
-      if (currentTrackerGroup) {
+      // Remove video plane from any tracker group and hide it completely
+      if (currentTrackerGroup && videoPlane) {
         currentTrackerGroup.remove(videoPlane);
         currentTrackerGroup = null;
+      }
+
+      // Explicitly hide the video plane to ensure it's not visible
+      if (videoPlane) {
+        videoPlane.visible = false;
       }
     }
   }
