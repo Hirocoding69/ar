@@ -3,7 +3,7 @@ import * as ZapparThree from "@zappar/zappar-threejs";
 
 const targetImage1 = new URL("../assets/two-targets/500.zpt", import.meta.url)
   .href;
-const targetImage2 = new URL("../assets/two-targets/500.zpt", import.meta.url)
+const targetImage2 = new URL("../assets/two-targets/500_1.zpt", import.meta.url)
   .href;
 // Single video that will play on both trackers
 const videoUrl = new URL("../assets/video/vid.mp4", import.meta.url).href;
@@ -63,8 +63,8 @@ videoTexture.magFilter = THREE.LinearFilter;
 function createVideoPlane(material: THREE.MeshBasicMaterial) {
   // In Zappar's coordinate system, image trackers use a normalized size of 1.0 x 1.0
   // Create a plane that matches the full image dimensions so the video fills the entire image
-  const planeWidth = 5.0;
-  const planeHeight = 2.5;
+  const planeWidth = 4.0;
+  const planeHeight = 2.0;
 
   const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
   const plane = new THREE.Mesh(planeGeometry, material);
