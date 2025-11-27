@@ -63,8 +63,8 @@ videoTexture.magFilter = THREE.LinearFilter;
 function createVideoPlane(material: THREE.MeshBasicMaterial) {
   // In Zappar's coordinate system, image trackers use a normalized size of 1.0 x 1.0
   // Create a plane that matches the full image dimensions so the video fills the entire image
-  const planeWidth = 6.0;
-  const planeHeight = 3.0;
+  const planeWidth = 5.0;
+  const planeHeight = 2.5;
 
   const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
   const plane = new THREE.Mesh(planeGeometry, material);
