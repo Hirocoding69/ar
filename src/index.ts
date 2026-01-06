@@ -39,8 +39,8 @@ videoElement.playsInline = true;
 videoElement.setAttribute("playsinline", "");
 videoElement.setAttribute("webkit-playsinline", "");
 videoElement.crossOrigin = "anonymous";
-videoElement.muted = true;
-videoElement.pause();
+videoElement.autoplay = false;
+videoElement.preload = "auto";
 
 const videoTexture = new THREE.VideoTexture(videoElement);
 videoTexture.minFilter = THREE.LinearFilter;
@@ -104,7 +104,6 @@ function render() {
       }
 
       if (videoElement.paused) {
-        videoElement.muted = false;
         videoElement.play().catch((error) => {
           console.error("Error playing video:", error);
         });
@@ -125,7 +124,6 @@ function render() {
       }
 
       if (videoElement.paused) {
-        videoElement.muted = false;
         videoElement.play().catch((error) => {
           console.error("Error playing video:", error);
         });
@@ -133,7 +131,7 @@ function render() {
     } else {
       if (!videoElement.paused) {
         videoElement.pause();
-        videoElement.muted = true;
+        videoElement.currentTime = 0;
       }
 
       tracker1.enabled = true;
