@@ -80,6 +80,7 @@ videoPlane.visible = false;
 // ----------------------------------
 let currentTrackerGroup: ZapparThree.ImageAnchorGroup | null = null;
 let trackingReady = false; // 🔒 prevents first-frame autoplay
+let hasSeenFirstTarget = false; // 🔒 ensures target detected before play
 
 // ----------------------------------
 // Permissions
@@ -107,10 +108,16 @@ function render() {
     return;
   }
 
-  const tracker1Active = trackerGroup1.visible;
-  const tracker2Active = trackerGroup2.visible;
+  // Check if trackers are actually tracking targets (not just group visibility)
+  const tracker1Active = trackerGroup1.visible && tracker1.visible;
+  const tracker2Active = trackerGroup2.visible && tracker2.visible;
 
-  if (tracker1Active) {
+  // Mark that we've seen a target at least once
+  if (tracker1Active || tracker2Active) {
+    hasSeenFirstTarget = true;
+  }
+
+  if (tracker1Active && hasSeenFirstTarget) {
     tracker2.enabled = false;
 
     if (currentTrackerGroup !== trackerGroup1) {
@@ -124,7 +131,7 @@ function render() {
     if (videoElement.paused) {
       videoElement.play().catch(console.error);
     }
-  } else if (tracker2Active) {
+  } else if (tracker2Active && hasSeenFirstTarget) {
     tracker1.enabled = false;
 
     if (currentTrackerGroup !== trackerGroup2) {
