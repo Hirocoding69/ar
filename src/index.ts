@@ -10,7 +10,10 @@ const videoUrl = new URL("../assets/video/vid.mp4", import.meta.url).href;
 // ----------------------------------
 // Renderer
 // ----------------------------------
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+  preserveDrawingBuffer: true,
+});
 document.body.appendChild(renderer.domElement);
 
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -79,8 +82,165 @@ videoPlane.visible = false;
 // State
 // ----------------------------------
 let currentTrackerGroup: ZapparThree.ImageAnchorGroup | null = null;
-let trackingReady = false; // 🔒 prevents first-frame autoplay
-let hasSeenFirstTarget = false; // 🔒 ensures target detected before play
+let trackingReady = false;
+let hasSeenFirstTarget = false;
+
+// ----------------------------------
+// Recording State
+// ----------------------------------
+let mediaRecorder: MediaRecorder | null = null;
+let recordedChunks: Blob[] = [];
+let isRecording: boolean = false;
+
+// ----------------------------------
+// UI Controls
+// ----------------------------------
+const recordButton = document.createElement("button");
+recordButton.textContent = "⏺ Record";
+recordButton.style.cssText = `
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 15px 30px;
+  font-size: 18px;
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  z-index: 1000;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+`;
+document.body.appendChild(recordButton);
+
+const recordingIndicator = document.createElement("div");
+recordingIndicator.style.cssText = `
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  background: rgba(255, 68, 68, 0.9);
+  color: white;
+  border-radius: 20px;
+  font-weight: bold;
+  display: none;
+  z-index: 1000;
+  animation: pulse 1.5s infinite;
+`;
+recordingIndicator.textContent = "● RECORDING";
+document.body.appendChild(recordingIndicator);
+
+// Add pulse animation
+const style = document.createElement("style");
+style.textContent = `
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+`;
+document.head.appendChild(style);
+
+// ----------------------------------
+// Recording Functions
+// ----------------------------------
+function startRecording() {
+  recordedChunks = [];
+
+  const canvas = renderer.domElement;
+  const stream = canvas.captureStream(30); // 30 FPS
+
+  // Add audio from the AR video if it's playing
+  if (!videoElement.paused && !videoElement.muted) {
+    try {
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaElementSource(videoElement);
+      const destination = audioContext.createMediaStreamDestination();
+      source.connect(destination);
+      source.connect(audioContext.destination);
+
+      destination.stream.getAudioTracks().forEach((track) => {
+        stream.addTrack(track);
+      });
+    } catch (err) {
+      console.warn("Could not capture audio:", err);
+    }
+  }
+
+  const options = {
+    mimeType: "video/webm;codecs=vp9",
+    videoBitsPerSecond: 2500000,
+  };
+
+  // Fallback for iOS/Safari
+  if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+    options.mimeType = "video/webm";
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+      options.mimeType = "video/mp4";
+    }
+  }
+
+  try {
+    mediaRecorder = new MediaRecorder(stream, options);
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) {
+        recordedChunks.push(e.data);
+      }
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks, { type: "video/webm" });
+      const url = URL.createObjectURL(blob);
+
+      // Create download link
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      a.download = `ar-recording-${Date.now()}.webm`;
+      document.body.appendChild(a);
+      a.click();
+
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+    };
+
+    mediaRecorder.start();
+    isRecording = true;
+
+    recordButton.textContent = "⏹ Stop";
+    recordButton.style.background = "#444";
+    recordingIndicator.style.display = "block";
+  } catch (err) {
+    console.error("Error starting recording:", err);
+    alert("Recording not supported on this device");
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder && isRecording) {
+    mediaRecorder.stop();
+    isRecording = false;
+
+    recordButton.textContent = "⏺ Record";
+    recordButton.style.background = "#ff4444";
+    recordingIndicator.style.display = "none";
+  }
+}
+
+recordButton.addEventListener("click", () => {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+});
 
 // ----------------------------------
 // Permissions
@@ -101,18 +261,15 @@ function render() {
 
   camera.updateFrame(renderer);
 
-  // 🔒 Ignore first frame (Zappar init frame)
   if (!trackingReady) {
     trackingReady = true;
     renderer.render(scene, camera);
     return;
   }
 
-  // Check if trackers are actually tracking targets (not just group visibility)
   const tracker1Active = trackerGroup1.visible && tracker1.visible;
   const tracker2Active = trackerGroup2.visible && tracker2.visible;
 
-  // Mark that we've seen a target at least once
   if (tracker1Active || tracker2Active) {
     hasSeenFirstTarget = true;
   }
