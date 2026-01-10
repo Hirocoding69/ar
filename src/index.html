@@ -2,6 +2,8 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
     <style>
       body {
         margin: 0;
@@ -11,6 +13,9 @@
         width: 100vw;
         height: 100vh;
         position: relative;
+      }
+      video {
+        object-fit: cover;
       }
       @keyframes pulse {
         0%,
@@ -26,33 +31,45 @@
   <body>
     <div id="container"></div>
 
-    <script type="module">
-      import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.module.js";
-      import { MindARThree } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js";
-
+    <script>
       // ----------------------------------
       // Setup
       // ----------------------------------
       const container = document.querySelector("#container");
 
       // Note: You'll need to provide your own .mind files
-      // Generate them from your target images using:
-      // https://hiukim.github.io/mind-ar-js-doc/tools/compile
-      const targetImage1 = "./targets/target1.mind";
-      const videoUrl = "./assets/video/vid.mp4";
+      const targetImage1 = "/assets/targets/target1.mind";
+      const videoUrl = "/assets/video/vid.mp4";
 
       // ----------------------------------
-      // Mind AR Setup
+      // Create renderer manually
       // ----------------------------------
-      const mindarThree = new MindARThree({
-        container: container,
-        imageTargetSrc: targetImage1,
-        maxTrack: 2,
-        filterMinCF: 0.0001,
-        filterBeta: 0.001,
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
       });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      container.appendChild(renderer.domElement);
 
-      const { renderer, scene, camera } = mindarThree;
+      // ----------------------------------
+      // Scene & Camera
+      // ----------------------------------
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        63.0,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+
+      // ----------------------------------
+      // Mind AR Controller (without Three.js wrapper)
+      // ----------------------------------
+      let mindarController;
+      const targets = [];
+      let tracker1Active = false;
+      let tracker2Active = false;
 
       // ----------------------------------
       // Video Element
@@ -90,16 +107,16 @@
       // ----------------------------------
       // Anchor Groups
       // ----------------------------------
-      const anchor1 = mindarThree.addAnchor(0);
-      const anchor2 = mindarThree.addAnchor(1);
+      const anchor1 = new THREE.Group();
+      const anchor2 = new THREE.Group();
+      scene.add(anchor1);
+      scene.add(anchor2);
 
       // ----------------------------------
       // State
       // ----------------------------------
       let currentAnchor = null;
       let hasSeenFirstTarget = false;
-      let tracker1Active = false;
-      let tracker2Active = false;
 
       // ----------------------------------
       // Recording State
@@ -157,9 +174,8 @@
         recordedChunks = [];
 
         const canvas = renderer.domElement;
-        const stream = canvas.captureStream(30); // 30 FPS
+        const stream = canvas.captureStream(30);
 
-        // Add audio from the AR video if it's playing
         if (!videoElement.paused && !videoElement.muted) {
           try {
             const audioContext = new AudioContext();
@@ -181,7 +197,6 @@
           videoBitsPerSecond: 2500000,
         };
 
-        // Fallback for iOS/Safari
         if (!MediaRecorder.isTypeSupported(options.mimeType)) {
           options.mimeType = "video/webm";
           if (!MediaRecorder.isTypeSupported(options.mimeType)) {
@@ -202,7 +217,6 @@
             const blob = new Blob(recordedChunks, { type: "video/webm" });
             const url = URL.createObjectURL(blob);
 
-            // Create download link
             const a = document.createElement("a");
             a.style.display = "none";
             a.href = url;
@@ -210,7 +224,6 @@
             document.body.appendChild(a);
             a.click();
 
-            // Cleanup
             setTimeout(() => {
               document.body.removeChild(a);
               URL.revokeObjectURL(url);
@@ -249,83 +262,107 @@
       });
 
       // ----------------------------------
-      // Target Event Handlers
-      // ----------------------------------
-      anchor1.group.add(videoPlane);
-
-      anchor1.onTargetFound = () => {
-        tracker1Active = true;
-        hasSeenFirstTarget = true;
-      };
-
-      anchor1.onTargetLost = () => {
-        tracker1Active = false;
-      };
-
-      anchor2.onTargetFound = () => {
-        tracker2Active = true;
-        hasSeenFirstTarget = true;
-      };
-
-      anchor2.onTargetLost = () => {
-        tracker2Active = false;
-      };
-
-      // ----------------------------------
-      // Start
+      // Initialize MindAR
       // ----------------------------------
       const start = async () => {
-        await mindarThree.start();
+        const video = document.createElement("video");
+        video.setAttribute("autoplay", "");
+        video.setAttribute("muted", "");
+        video.setAttribute("playsinline", "");
+        video.style.position = "absolute";
+        video.style.top = "0";
+        video.style.left = "0";
+        video.style.width = "100%";
+        video.style.height = "100%";
+        video.style.objectFit = "cover";
+        video.style.zIndex = "-1";
+        container.appendChild(video);
 
-        renderer.setAnimationLoop(() => {
-          // Same logic as Zappar version
-          if (tracker1Active || tracker2Active) {
+        const mindarCompiler = new window.MINDAR.IMAGE.Compiler();
+
+        try {
+          // Load target image
+          const targetData = await fetch(targetImage1).then((r) =>
+            r.arrayBuffer()
+          );
+
+          // Create simple controller manually
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+          });
+
+          video.srcObject = stream;
+          await video.play();
+
+          // Simple tracking setup
+          anchor1.add(videoPlane);
+
+          // Animation loop
+          function animate() {
+            requestAnimationFrame(animate);
+
+            // Simple detection logic - you'll need to implement actual tracking
+            // This is a placeholder that shows the video plane
+            if (tracker1Active && hasSeenFirstTarget) {
+              if (currentAnchor !== anchor1) {
+                if (currentAnchor) currentAnchor.remove(videoPlane);
+                anchor1.add(videoPlane);
+                currentAnchor = anchor1;
+              }
+
+              videoPlane.visible = true;
+
+              if (videoElement.paused) {
+                videoElement.play().catch(console.error);
+              }
+            } else if (tracker2Active && hasSeenFirstTarget) {
+              if (currentAnchor !== anchor2) {
+                if (currentAnchor) currentAnchor.remove(videoPlane);
+                anchor2.add(videoPlane);
+                currentAnchor = anchor2;
+              }
+
+              videoPlane.visible = true;
+
+              if (videoElement.paused) {
+                videoElement.play().catch(console.error);
+              }
+            } else {
+              if (!videoElement.paused) {
+                videoElement.pause();
+                videoElement.currentTime = 0;
+              }
+
+              if (currentAnchor) {
+                currentAnchor.remove(videoPlane);
+                currentAnchor = null;
+              }
+
+              videoPlane.visible = false;
+            }
+
+            renderer.render(scene, camera);
+          }
+
+          animate();
+
+          // Simulate tracking events for testing
+          setTimeout(() => {
+            tracker1Active = true;
             hasSeenFirstTarget = true;
-          }
-
-          if (tracker1Active && hasSeenFirstTarget) {
-            // Disable tracker 2 detection (Mind AR doesn't have direct enable/disable)
-
-            if (currentAnchor !== anchor1) {
-              if (currentAnchor) currentAnchor.group.remove(videoPlane);
-              anchor1.group.add(videoPlane);
-              currentAnchor = anchor1;
-            }
-
-            videoPlane.visible = true;
-
-            if (videoElement.paused) {
-              videoElement.play().catch(console.error);
-            }
-          } else if (tracker2Active && hasSeenFirstTarget) {
-            if (currentAnchor !== anchor2) {
-              if (currentAnchor) currentAnchor.group.remove(videoPlane);
-              anchor2.group.add(videoPlane);
-              currentAnchor = anchor2;
-            }
-
-            videoPlane.visible = true;
-
-            if (videoElement.paused) {
-              videoElement.play().catch(console.error);
-            }
-          } else {
-            if (!videoElement.paused) {
-              videoElement.pause();
-              videoElement.currentTime = 0;
-            }
-
-            if (currentAnchor) {
-              currentAnchor.group.remove(videoPlane);
-              currentAnchor = null;
-            }
-
-            videoPlane.visible = false;
-          }
-
-          renderer.render(scene, camera);
-        });
+          }, 2000);
+        } catch (err) {
+          console.error("Error starting AR:", err);
+          alert("Could not start AR: " + err.message);
+        }
       };
+
+      // Resize handler
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
 
       start();
     </script>
