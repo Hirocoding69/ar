@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      #container {
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+      }
+      video {
+        object-fit: cover;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+
+    <script>
+      // ----------------------------------
+      // Setup
+      // ----------------------------------
+      const container = document.querySelector("#container");
+
+      // Note: You'll need to provide your own .mind files
+      const targetImage1 = "/assets/targets/target1.mind";
+      const videoUrl = "/assets/video/vid.mp4";
+
+      // ----------------------------------
+      // Create renderer manually
+      // ----------------------------------
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+      });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      container.appendChild(renderer.domElement);
+
+      // ----------------------------------
+      // Scene & Camera
+      // ----------------------------------
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        63.0,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+
+      // ----------------------------------
+      // Mind AR Controller (without Three.js wrapper)
+      // ----------------------------------
+      let mindarController;
+      const targets = [];
+      let tracker1Active = false;
+      let tracker2Active = false;
+
+      // ----------------------------------
+      // Video Element
+      // ----------------------------------
+      const videoElement = document.createElement("video");
+      videoElement.src = videoUrl;
+      videoElement.loop = true;
+      videoElement.playsInline = true;
+      videoElement.setAttribute("playsinline", "");
+      videoElement.setAttribute("webkit-playsinline", "");
+      videoElement.crossOrigin = "anonymous";
+      videoElement.autoplay = false;
+      videoElement.muted = false;
+      videoElement.preload = "metadata";
+      videoElement.load();
+      videoElement.pause();
+
+      const videoTexture = new THREE.VideoTexture(videoElement);
+      videoTexture.minFilter = THREE.LinearFilter;
+      videoTexture.magFilter = THREE.LinearFilter;
+
+      // ----------------------------------
+      // Video Plane
+      // ----------------------------------
+      const planeGeometry = new THREE.PlaneGeometry(1, 0.5);
+      const planeMaterial = new THREE.MeshBasicMaterial({
+        map: videoTexture,
+        transparent: true,
+        side: THREE.DoubleSide,
+      });
+
+      const videoPlane = new THREE.Mesh(planeGeometry, planeMaterial);
+      videoPlane.visible = false;
+
+      // ----------------------------------
+      // Anchor Groups
+      // ----------------------------------
+      const anchor1 = new THREE.Group();
+      const anchor2 = new THREE.Group();
+      scene.add(anchor1);
+      scene.add(anchor2);
+
+      // ----------------------------------
+      // State
+      // ----------------------------------
+      let currentAnchor = null;
+      let hasSeenFirstTarget = false;
+
+      // ----------------------------------
+      // Recording State
+      // ----------------------------------
+      let mediaRecorder = null;
+      let recordedChunks = [];
+      let isRecording = false;
+
+      // ----------------------------------
+      // UI Controls
+      // ----------------------------------
+      const recordButton = document.createElement("button");
+      recordButton.textContent = "⏺ Record";
+      recordButton.style.cssText = `
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 15px 30px;
+      font-size: 18px;
+      background: #ff4444;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      z-index: 1000;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+    `;
+      document.body.appendChild(recordButton);
+
+      const recordingIndicator = document.createElement("div");
+      recordingIndicator.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      background: rgba(255, 68, 68, 0.9);
+      color: white;
+      border-radius: 20px;
+      font-weight: bold;
+      display: none;
+      z-index: 1000;
+      animation: pulse 1.5s infinite;
+    `;
+      recordingIndicator.textContent = "● RECORDING";
+      document.body.appendChild(recordingIndicator);
+
+      // ----------------------------------
+      // Recording Functions
+      // ----------------------------------
+      function startRecording() {
+        recordedChunks = [];
+
+        const canvas = renderer.domElement;
+        const stream = canvas.captureStream(30);
+
+        if (!videoElement.paused && !videoElement.muted) {
+          try {
+            const audioContext = new AudioContext();
+            const source = audioContext.createMediaElementSource(videoElement);
+            const destination = audioContext.createMediaStreamDestination();
+            source.connect(destination);
+            source.connect(audioContext.destination);
+
+            destination.stream.getAudioTracks().forEach((track) => {
+              stream.addTrack(track);
+            });
+          } catch (err) {
+            console.warn("Could not capture audio:", err);
+          }
+        }
+
+        const options = {
+          mimeType: "video/webm;codecs=vp9",
+          videoBitsPerSecond: 2500000,
+        };
+
+        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+          options.mimeType = "video/webm";
+          if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+            options.mimeType = "video/mp4";
+          }
+        }
+
+        try {
+          mediaRecorder = new MediaRecorder(stream, options);
+
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+              recordedChunks.push(e.data);
+            }
+          };
+
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: "video/webm" });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = `ar-recording-${Date.now()}.webm`;
+            document.body.appendChild(a);
+            a.click();
+
+            setTimeout(() => {
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }, 100);
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+
+          recordButton.textContent = "⏹ Stop";
+          recordButton.style.background = "#444";
+          recordingIndicator.style.display = "block";
+        } catch (err) {
+          console.error("Error starting recording:", err);
+          alert("Recording not supported on this device");
+        }
+      }
+
+      function stopRecording() {
+        if (mediaRecorder && isRecording) {
+          mediaRecorder.stop();
+          isRecording = false;
+
+          recordButton.textContent = "⏺ Record";
+          recordButton.style.background = "#ff4444";
+          recordingIndicator.style.display = "none";
+        }
+      }
+
+      recordButton.addEventListener("click", () => {
+        if (isRecording) {
+          stopRecording();
+        } else {
+          startRecording();
+        }
+      });
+
+      // ----------------------------------
+      // Initialize MindAR
+      // ----------------------------------
+      const start = async () => {
+        const video = document.createElement("video");
+        video.setAttribute("autoplay", "");
+        video.setAttribute("muted", "");
+        video.setAttribute("playsinline", "");
+        video.style.position = "absolute";
+        video.style.top = "0";
+        video.style.left = "0";
+        video.style.width = "100%";
+        video.style.height = "100%";
+        video.style.objectFit = "cover";
+        video.style.zIndex = "-1";
+        container.appendChild(video);
+
+        const mindarCompiler = new window.MINDAR.IMAGE.Compiler();
+
+        try {
+          // Load target image
+          const targetData = await fetch(targetImage1).then((r) =>
+            r.arrayBuffer()
+          );
+
+          // Create simple controller manually
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+          });
+
+          video.srcObject = stream;
+          await video.play();
+
+          // Simple tracking setup
+          anchor1.add(videoPlane);
+
+          // Animation loop
+          function animate() {
+            requestAnimationFrame(animate);
+
+            // Simple detection logic - you'll need to implement actual tracking
+            // This is a placeholder that shows the video plane
+            if (tracker1Active && hasSeenFirstTarget) {
+              if (currentAnchor !== anchor1) {
+                if (currentAnchor) currentAnchor.remove(videoPlane);
+                anchor1.add(videoPlane);
+                currentAnchor = anchor1;
+              }
+
+              videoPlane.visible = true;
+
+              if (videoElement.paused) {
+                videoElement.play().catch(console.error);
+              }
+            } else if (tracker2Active && hasSeenFirstTarget) {
+              if (currentAnchor !== anchor2) {
+                if (currentAnchor) currentAnchor.remove(videoPlane);
+                anchor2.add(videoPlane);
+                currentAnchor = anchor2;
+              }
+
+              videoPlane.visible = true;
+
+              if (videoElement.paused) {
+                videoElement.play().catch(console.error);
+              }
+            } else {
+              if (!videoElement.paused) {
+                videoElement.pause();
+                videoElement.currentTime = 0;
+              }
+
+              if (currentAnchor) {
+                currentAnchor.remove(videoPlane);
+                currentAnchor = null;
+              }
+
+              videoPlane.visible = false;
+            }
+
+            renderer.render(scene, camera);
+          }
+
+          animate();
+
+          // Simulate tracking events for testing
+          setTimeout(() => {
+            tracker1Active = true;
+            hasSeenFirstTarget = true;
+          }, 2000);
+        } catch (err) {
+          console.error("Error starting AR:", err);
+          alert("Could not start AR: " + err.message);
+        }
+      };
+
+      // Resize handler
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      start();
+    </script>
+  </body>
+</html>
