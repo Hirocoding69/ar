@@ -2,9 +2,6 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
     <style>
       body {
         margin: 0;
@@ -29,7 +26,20 @@
   <body>
     <div id="container"></div>
 
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.147.0/examples/jsm/",
+          "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js"
+        }
+      }
+    </script>
+
     <script type="module">
+      import * as THREE from "three";
+      import { MindARThree } from "mindar-image-three";
+
       // ----------------------------------
       // Setup
       // ----------------------------------
@@ -38,16 +48,15 @@
       // Note: You'll need to provide your own .mind files
       // Generate them from your target images using:
       // https://hiukim.github.io/mind-ar-js-doc/tools/compile
-      const targetImage1 = "/assets/targets/target1.mind";
-      const targetImage2 = "/assets/targets/target2.mind";
-      const videoUrl = "/assets/video/vid.mp4";
+      const targetImage1 = "./targets/target1.mind";
+      const videoUrl = "./assets/video/vid.mp4";
 
       // ----------------------------------
       // Mind AR Setup
       // ----------------------------------
-      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+      const mindarThree = new MindARThree({
         container: container,
-        imageTargetSrc: targetImage1, // We'll handle dual targets differently
+        imageTargetSrc: targetImage1,
         maxTrack: 2,
         filterMinCF: 0.0001,
         filterBeta: 0.001,
