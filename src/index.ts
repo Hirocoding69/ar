@@ -99,7 +99,7 @@ const recordButton = document.createElement("button");
 recordButton.textContent = "⏺ Record";
 recordButton.style.cssText = `
   position: fixed;
-  bottom: 30px;
+  bottom: 60px;
   left: 50%;
   transform: translateX(-50%);
   padding: 15px 30px;
