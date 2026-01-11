@@ -84,7 +84,38 @@ videoPlane.visible = false;
 let currentTrackerGroup: ZapparThree.ImageAnchorGroup | null = null;
 let trackingReady = false;
 let hasSeenFirstTarget = false;
-let wasTracking = false; // Track previous frame's tracking state
+let activeAnchors = new Set<ZapparThree.ImageAnchor>();
+
+// ----------------------------------
+// Tracking Events
+// ----------------------------------
+tracker1.onVisible.bind((anchor) => {
+  console.log("Tracker 1: Image detected!");
+  activeAnchors.add(anchor);
+  alert("Image tracked and recognized! (Target 1)");
+});
+
+tracker1.onNotVisible.bind((anchor) => {
+  console.log("Tracker 1: Tracking lost!");
+  activeAnchors.delete(anchor);
+  if (activeAnchors.size === 0) {
+    alert("Tracking lost!");
+  }
+});
+
+tracker2.onVisible.bind((anchor) => {
+  console.log("Tracker 2: Image detected!");
+  activeAnchors.add(anchor);
+  alert("Image tracked and recognized! (Target 2)");
+});
+
+tracker2.onNotVisible.bind((anchor) => {
+  console.log("Tracker 2: Tracking lost!");
+  activeAnchors.delete(anchor);
+  if (activeAnchors.size === 0) {
+    alert("Tracking lost!");
+  }
+});
 
 // ----------------------------------
 // Recording State
@@ -268,24 +299,10 @@ function render() {
     return;
   }
 
-  const tracker1Active = trackerGroup1.visible && tracker1.visible;
-  const tracker2Active = trackerGroup2.visible && tracker2.visible;
-  const isTracking = Boolean(tracker1Active || tracker2Active);
+  const tracker1Active = tracker1.anchors.size > 0;
+  const tracker2Active = tracker2.anchors.size > 0;
 
-  // Alert when tracking starts
-  if (isTracking && !wasTracking) {
-    alert("Image tracked and recognized!");
-  }
-
-  // Alert when tracking is lost
-  if (!isTracking && wasTracking) {
-    alert("Tracking lost!");
-  }
-
-  // Update tracking state for next frame
-  wasTracking = isTracking;
-
-  if (isTracking) {
+  if (tracker1Active || tracker2Active) {
     hasSeenFirstTarget = true;
   }
 
