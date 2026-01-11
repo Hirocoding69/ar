@@ -84,6 +84,7 @@ videoPlane.visible = false;
 let currentTrackerGroup: ZapparThree.ImageAnchorGroup | null = null;
 let trackingReady = false;
 let hasSeenFirstTarget = false;
+let wasTracking = false; // Track previous frame's tracking state
 
 // ----------------------------------
 // Recording State
@@ -269,8 +270,22 @@ function render() {
 
   const tracker1Active = trackerGroup1.visible && tracker1.visible;
   const tracker2Active = trackerGroup2.visible && tracker2.visible;
+  const isTracking = Boolean(tracker1Active || tracker2Active);
 
-  if (tracker1Active || tracker2Active) {
+  // Alert when tracking starts
+  if (isTracking && !wasTracking) {
+    alert("Image tracked and recognized!");
+  }
+
+  // Alert when tracking is lost
+  if (!isTracking && wasTracking) {
+    alert("Tracking lost!");
+  }
+
+  // Update tracking state for next frame
+  wasTracking = isTracking;
+
+  if (isTracking) {
     hasSeenFirstTarget = true;
   }
 
