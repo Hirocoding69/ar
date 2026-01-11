@@ -92,28 +92,28 @@ let activeAnchors = new Set<ZapparThree.ImageAnchor>();
 tracker1.onVisible.bind((anchor) => {
   console.log("Tracker 1: Image detected!");
   activeAnchors.add(anchor);
-  alert("Image tracked and recognized! (Target 1)");
+  // alert("Image tracked and recognized! (Target 1)");
 });
 
 tracker1.onNotVisible.bind((anchor) => {
   console.log("Tracker 1: Tracking lost!");
   activeAnchors.delete(anchor);
   if (activeAnchors.size === 0) {
-    alert("Tracking lost!");
+    // alert("Tracking lost!");
   }
 });
 
 tracker2.onVisible.bind((anchor) => {
   console.log("Tracker 2: Image detected!");
   activeAnchors.add(anchor);
-  alert("Image tracked and recognized! (Target 2)");
+  // alert("Image tracked and recognized! (Target 2)");
 });
 
 tracker2.onNotVisible.bind((anchor) => {
   console.log("Tracker 2: Tracking lost!");
   activeAnchors.delete(anchor);
   if (activeAnchors.size === 0) {
-    alert("Tracking lost!");
+    // alert("Tracking lost!");
   }
 });
 
