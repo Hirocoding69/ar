@@ -1,11 +1,11 @@
 import * as THREE from "three";
 import * as ZapparThree from "@zappar/zappar-threejs";
 
-const targetImage1 = new URL("../assets/two-targets/500.zpt", import.meta.url)
+const targetImage1 = new URL("https://sambo-test-dev.s3.ap-southeast-1.amazonaws.com/500.zpt", import.meta.url)
   .href;
-const targetImage2 = new URL("../assets/two-targets/500_1.zpt", import.meta.url)
+const targetImage2 = new URL("https://sambo-test-dev.s3.ap-southeast-1.amazonaws.com/500_1.zpt", import.meta.url)
   .href;
-const videoUrl = new URL("../assets/video/vid.mp4", import.meta.url).href;
+const videoUrl = new URL("https://sambo-test-dev.s3.ap-southeast-1.amazonaws.com/vid.mp4", import.meta.url).href;
 
 // ----------------------------------
 // Renderer
