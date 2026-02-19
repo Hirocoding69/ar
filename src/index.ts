@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import * as ZapparThree from "@zappar/zappar-threejs";
 
-const targetImage1 = new URL("https://sambo-test-dev.s3.ap-southeast-1.amazonaws.com/sting.zpt", import.meta.url)
+const targetImage1 = new URL("https://sambo-test-dev.s3.ap-southeast-1.amazonaws.com/sting.png.zpt", import.meta.url)
   .href;
 const targetImage2 = new URL("https://sambo-test-dev.s3.ap-southeast-1.amazonaws.com/500_1.zpt", import.meta.url)
   .href;
